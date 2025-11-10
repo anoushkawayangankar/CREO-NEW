@@ -6,7 +6,17 @@ LearnLoop is a Next.js-based learning platform that uses Google's Gemini AI to g
 **Current State**: Successfully migrated from Vercel to Replit and running in production mode.
 
 ## Recent Changes
-- **November 10, 2025 (Latest)**: Simplified course display
+- **November 10, 2025 (Latest)**: Added interactive module carousel
+  - **3D Card Carousel**: Swipeable module cards with perspective transforms
+  - **Drag & Swipe**: Smooth framer-motion drag gestures to navigate modules
+  - **Auto-Loop**: Infinite carousel that seamlessly loops through all modules
+  - **Progress Indicators**: Bottom navigation dots showing current module
+  - **Module Preview**: Each card shows title, description, topic count, and icon
+  - **Interactive Click**: Click on any module card to expand details and scroll to it
+  - **Responsive Design**: Matches LearnLoop's warm color palette (#a95757, #f2e7d9)
+  - **Accessibility**: Keyboard navigation and ARIA labels
+  
+- **November 10, 2025**: Simplified course display
   - Removed gamified roadmap visualization
   - Clean course outline with module breakdown
   - Enhanced time cadence display with real-time updates

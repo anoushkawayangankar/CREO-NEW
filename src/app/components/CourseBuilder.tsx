@@ -14,6 +14,7 @@ import FeaturedVideoWorkspace from '@/app/components/FeaturedVideoWorkspace';
 import CourseNotesSidebar from '@/app/components/CourseNotesSidebar';
 import LearningPathCohortCard from '@/app/components/LearningPathCohortCard';
 import ModuleSocialSpace from '@/app/components/ModuleSocialSpace';
+import ModuleCarousel from '@/app/components/ModuleCarousel';
 import { Playfair_Display, Space_Grotesk } from 'next/font/google';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -648,6 +649,20 @@ export default function CourseBuilder() {
               </div>
             )}
           </div>
+
+          {/* Module Carousel */}
+          <ModuleCarousel
+            modules={course.modules}
+            onModuleSelect={(moduleId, index) => {
+              toggleModule(moduleId);
+              // Scroll to the module details section
+              const moduleElement = document.getElementById(`module-${moduleId}`);
+              if (moduleElement) {
+                moduleElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }}
+            loop={true}
+          />
 
           <LearningPathCohortCard
             topic={course.title}
