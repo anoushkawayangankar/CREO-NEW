@@ -6,6 +6,13 @@ LearnLoop is a Next.js-based learning platform that uses Google's Gemini AI to g
 **Current State**: Successfully migrated from Vercel to Replit and running in production mode.
 
 ## Recent Changes
+- **November 10, 2025 (Latest)**: Fixed course generation status indicators and logging
+  - Fixed status state race condition - "Course ready" indicator now displays for full 5 seconds
+  - Added request ID correlation between frontend and backend for better debugging
+  - Implemented concise structured logging with timing information
+  - Verified course generation correctly uses user's topic and difficulty (both Gemini and fallback)
+  - Status flow: idle → loading → done (5s) → idle
+  
 - **November 10, 2025**: Migrated project from Vercel to Replit
   - Configured Next.js to run on port 5000 with 0.0.0.0 binding for Replit compatibility
   - Set up development workflow with webview output
@@ -94,6 +101,14 @@ Course testing endpoint
 - Using `--legacy-peer-deps` for npm install due to React 19 and framer-motion compatibility
 - TypeScript type checking disabled in build (`ignoreBuildErrors: true`) due to framer-motion/React 19 type incompatibilities - code works correctly at runtime
 - YouTube integration available but API key not yet configured
+- Turbopack panic in Next.js 16 is a known issue and doesn't affect functionality
+
+## Debugging & Logging
+- Course generation requests include correlation IDs (format: `req_TIMESTAMP_RANDOM`)
+- Frontend logs: `[req_xxx] Course generation: Topic (difficulty)`
+- Backend logs: `[req_xxx] Request: "Topic" (difficulty, duration)`
+- Success logs: `[req_xxx] Success: "Course Title" (N modules, Xms)`
+- Check browser console and server logs for the same request ID to trace issues
 
 ## User Preferences
 - None documented yet
