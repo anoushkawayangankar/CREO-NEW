@@ -455,11 +455,11 @@ export default function Home() {
           </div>
         </nav>
 
-        {/* Elegant Floating Hero Content */}
+        {/* Hero - Phantom-inspired structure */}
         <div className="relative z-20 flex items-center justify-center min-h-[calc(100vh-100px)] px-6 pb-16">
-          <div className="max-w-7xl w-full">
+          <div className="relative max-w-7xl w-full">
             
-            {/* Purposeful floating elements showcasing CREO's features */}
+            {/* Floating elements around headline */}
             <div className="hidden lg:block">
               {HERO_FLOATING_ELEMENTS.map((element) => (
                 <FloatingElement
@@ -471,42 +471,53 @@ export default function Home() {
               ))}
             </div>
 
-            {/* Main headline */}
-            <div className="text-center relative z-10 max-w-5xl mx-auto">
+            {/* Main headline - centered with tagline and CTA */}
+            <div className="text-center relative z-10">
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
               >
-                <h1 className={`${headlineFont.className} text-7xl md:text-8xl lg:text-9xl font-black mb-6 leading-[0.95] transition-colors duration-300 ${
+                <h1 className={`${headlineFont.className} text-7xl md:text-8xl lg:text-9xl font-black leading-[0.9] transition-colors duration-300 ${
                   isDarkMode ? 'text-[#f5e6dc]' : 'text-[#1f120f]'
                 }`}>
-                  <span className={`inline-block ${
+                  <span className={`inline-block px-8 py-4 rounded-[3rem] ${
                     isDarkMode 
-                      ? 'drop-shadow-[0_4px_20px_rgba(194,79,99,0.3)]' 
-                      : 'drop-shadow-[0_4px_20px_rgba(194,79,99,0.15)]'
+                      ? 'bg-[#f5e6dc]/95 text-[#1f120f] shadow-[0_20px_80px_rgba(245,230,220,0.3)]' 
+                      : 'bg-white/95 text-[#1f120f] shadow-[0_20px_80px_rgba(31,18,15,0.15)]'
                   }`}>
                     Meet Creo
                   </span>
                 </h1>
               </motion.div>
 
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.7, delay: 0.4 }}
+                className={`${bodyFont.className} text-2xl md:text-3xl font-medium mt-8 transition-colors duration-300 ${
+                  isDarkMode ? 'text-[#f5e6dc]' : 'text-[#1f120f]'
+                }`}
+              >
+                This is Smart Learning
+              </motion.p>
+
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.7, delay: 0.5 }}
-                className="mt-8"
+                transition={{ duration: 0.7, delay: 0.6 }}
+                className="mt-10"
               >
                 <Link
                   href="/course"
-                  className={`${headlineFont.className} inline-flex items-center gap-3 px-10 py-5 rounded-full font-semibold text-xl transition-all ${
+                  className={`${bodyFont.className} inline-flex items-center gap-3 px-8 py-4 rounded-full font-semibold text-lg transition-all shadow-2xl ${
                     isDarkMode 
-                      ? 'bg-[#f5e6dc] text-[#1f120f] shadow-[0_20px_60px_rgba(245,230,220,0.2)] hover:shadow-[0_25px_70px_rgba(245,230,220,0.3)] hover:bg-[#e6d7cd]' 
-                      : 'bg-[#1f120f] text-white shadow-[0_20px_60px_rgba(31,18,15,0.3)] hover:shadow-[0_25px_70px_rgba(31,18,15,0.4)]'
-                  } hover:scale-[1.02]`}
+                      ? 'bg-[#c24f63] text-white hover:bg-[#d15f73] shadow-[0_20px_60px_rgba(194,79,99,0.4)]' 
+                      : 'bg-[#c24f63] text-white hover:bg-[#d15f73] shadow-[0_20px_60px_rgba(194,79,99,0.3)]'
+                  } hover:scale-105 hover:shadow-[0_25px_70px_rgba(194,79,99,0.5)]`}
                 >
-                  <span>Start learning</span>
-                  <span className="text-2xl">→</span>
+                  <span>Launch Builder</span>
+                  <span className="text-xl">→</span>
                 </Link>
               </motion.div>
             </div>
