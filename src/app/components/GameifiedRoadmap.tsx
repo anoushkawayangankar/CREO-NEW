@@ -19,12 +19,12 @@ const GameifiedRoadmap = ({ course }: GameifiedRoadmapProps) => {
     const progress = index / Math.max(total - 1, 1);
     
     // Create a winding S-curve path from bottom to top
-    const y = 85 - (progress * 70); // Bottom to top (85% to 15%)
+    const y = 80 - (progress * 60); // Bottom to top (80% to 20%)
     
-    // Alternate left-right with smooth sine wave
-    const amplitude = 25; // How far left/right the path swings
-    const frequency = 1.5; // Number of curves
-    const x = 50 + Math.sin(index * frequency) * amplitude;
+    // Alternate left-right with smooth sine wave for variety
+    const amplitude = 20; // How far left/right the path swings
+    const frequency = 0.8; // Number of curves
+    const x = 50 + Math.sin(index * frequency * Math.PI) * amplitude;
     
     return { x, y };
   };
@@ -97,8 +97,9 @@ const GameifiedRoadmap = ({ course }: GameifiedRoadmapProps) => {
             d={pathData}
             fill="none"
             stroke="url(#pathGradient)"
-            strokeWidth="0.8"
+            strokeWidth="1.2"
             strokeLinecap="round"
+            strokeDasharray="none"
             initial={{ pathLength: 0 }}
             animate={{ pathLength: 1 }}
             transition={{ duration: 2, ease: 'easeInOut', delay: 0.3 }}
@@ -136,27 +137,28 @@ const GameifiedRoadmap = ({ course }: GameifiedRoadmapProps) => {
 
               {/* Circle node */}
               <motion.button
-                whileHover={{ scale: 1.25 }}
+                whileHover={{ scale: 1.2 }}
                 whileTap={{ scale: 0.95 }}
-                className={`relative w-16 h-16 rounded-full flex items-center justify-center shadow-2xl cursor-pointer transition-all duration-300 ${bgGradient} border-4 border-white`}
+                className={`relative w-20 h-20 rounded-full flex items-center justify-center shadow-2xl cursor-pointer transition-all duration-300 ${bgGradient} border-4 border-white`}
                 aria-label={`Module ${index + 1}: ${module.title}`}
               >
-                <span className="text-2xl font-bold text-white drop-shadow-md">
+                {/* Show icon instead of number for visual appeal */}
+                <div className="relative z-10">
+                  {index === 0 && <Star className="w-9 h-9 text-white drop-shadow-lg" fill="white" />}
+                  {index === modules.length - 1 && <Trophy className="w-9 h-9 text-white drop-shadow-lg" />}
+                  {index > 0 && index < modules.length - 1 && <Zap className="w-9 h-9 text-white drop-shadow-lg" />}
+                </div>
+
+                {/* Module number badge */}
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center text-sm font-bold text-[#262626] shadow-lg border-2 border-[#a95757]">
                   {index + 1}
-                </span>
+                </div>
 
                 {/* Completion checkmark */}
-                <div className="absolute -top-1 -right-1 bg-white rounded-full p-0.5 shadow-md">
+                <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-md">
                   <CheckCircle2 className="w-5 h-5 text-[#34d399] fill-[#34d399]" />
                 </div>
               </motion.button>
-
-              {/* Achievement icon overlay */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                {index === 0 && <Star className="w-7 h-7 text-white drop-shadow-lg" fill="white" />}
-                {index === modules.length - 1 && <Trophy className="w-7 h-7 text-white drop-shadow-lg" />}
-                {index > 0 && index < modules.length - 1 && <Zap className="w-7 h-7 text-white drop-shadow-lg" />}
-              </div>
 
               {/* Topic count stars below */}
               <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 flex gap-0.5">
