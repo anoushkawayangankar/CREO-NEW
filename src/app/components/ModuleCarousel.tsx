@@ -13,6 +13,7 @@ interface ModuleCarouselProps {
   onModuleSelect?: (moduleId: string, index: number) => void;
   autoplayInterval?: number;
   loop?: boolean;
+  isDarkMode?: boolean;
 }
 
 const DRAG_BUFFER = 0;
@@ -24,7 +25,8 @@ export default function ModuleCarousel({
   modules,
   onModuleSelect,
   autoplayInterval = 0,
-  loop = true
+  loop = true,
+  isDarkMode = false
 }: ModuleCarouselProps) {
   const baseWidth = 900;
   const containerPadding = 24;
@@ -123,20 +125,30 @@ export default function ModuleCarousel({
   return (
     <div className={`${bodyFont.className} w-full max-w-5xl mx-auto`}>
       <div className="mb-6 flex items-center justify-between">
-        <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#fff5ef] to-[#f2e7d9] rounded-full border border-[#a95757]/20 shadow-sm">
-          <Zap className="w-5 h-5 text-[#a95757]" />
-          <span className="text-sm uppercase tracking-[0.2em] text-[#a95757] font-semibold">
+        <div className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full border shadow-sm transition-colors duration-300 ${
+          isDarkMode 
+            ? 'bg-gradient-to-r from-[#2a1f1a] to-[#1f1410] border-[#c24f63]/20' 
+            : 'bg-gradient-to-r from-[#fff5ef] to-[#f2e7d9] border-[#a95757]/20'
+        }`}>
+          <Zap className={`w-5 h-5 ${isDarkMode ? 'text-[#c24f63]' : 'text-[#a95757]'}`} />
+          <span className={`text-sm uppercase tracking-[0.2em] font-semibold transition-colors duration-300 ${
+            isDarkMode ? 'text-[#c24f63]' : 'text-[#a95757]'
+          }`}>
             Course Modules
           </span>
         </div>
-        <div className="text-sm text-[#666]">
+        <div className={`text-sm transition-colors duration-300 ${isDarkMode ? 'text-[#c9a89a]' : 'text-[#666]'}`}>
           {modules.length} {modules.length === 1 ? 'Module' : 'Modules'}
         </div>
       </div>
 
       <div
         ref={containerRef}
-        className="relative overflow-hidden rounded-3xl border border-[#f2e7d9] shadow-2xl bg-gradient-to-br from-white to-[#fffcf9]"
+        className={`relative overflow-hidden rounded-3xl border shadow-2xl transition-colors duration-300 ${
+          isDarkMode 
+            ? 'bg-gradient-to-br from-[#1a120e] to-[#1f1410] border-[#3a2f2a]' 
+            : 'bg-gradient-to-br from-white to-[#fffcf9] border-[#f2e7d9]'
+        }`}
         style={{
           width: '100%',
           maxWidth: `${baseWidth}px`,
@@ -176,7 +188,11 @@ export default function ModuleCarousel({
             return (
               <motion.div
                 key={`${module.id}-${index}`}
-                className="relative flex flex-shrink-0 flex-col justify-between bg-gradient-to-br from-white to-[#fffcf9] border-2 border-[#f2e7d9] rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all hover:border-[#a95757]/40"
+                className={`relative flex flex-shrink-0 flex-col justify-between border-2 rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all ${
+                  isDarkMode 
+                    ? 'bg-gradient-to-br from-[#1a120e] to-[#1f1410] border-[#3a2f2a] hover:border-[#c24f63]/40' 
+                    : 'bg-gradient-to-br from-white to-[#fffcf9] border-[#f2e7d9] hover:border-[#a95757]/40'
+                }`}
                 style={{
                   width: itemWidth,
                   minHeight: '420px',
@@ -188,17 +204,29 @@ export default function ModuleCarousel({
                 {/* Header */}
                 <div className="p-8 pb-6">
                   <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#fff5ef] to-[#f2e7d9] border-2 border-[#a95757]/30 shadow-md">
+                    <div className={`flex items-center justify-center w-16 h-16 rounded-2xl border-2 shadow-md transition-colors duration-300 ${
+                      isDarkMode 
+                        ? 'bg-gradient-to-br from-[#2a1f1a] to-[#1f1410] border-[#c24f63]/30' 
+                        : 'bg-gradient-to-br from-[#fff5ef] to-[#f2e7d9] border-[#a95757]/30'
+                    }`}>
                       {getModuleIcon(actualIndex, modules.length)}
                     </div>
-                    <div className="text-sm font-bold text-[#a95757] bg-[#fff5ef] px-4 py-2 rounded-full border border-[#a95757]/20 shadow-sm">
+                    <div className={`text-sm font-bold px-4 py-2 rounded-full border shadow-sm transition-colors duration-300 ${
+                      isDarkMode 
+                        ? 'text-[#c24f63] bg-[#2a1f1a] border-[#c24f63]/20' 
+                        : 'text-[#a95757] bg-[#fff5ef] border-[#a95757]/20'
+                    }`}>
                       Module {actualIndex + 1}
                     </div>
                   </div>
-                  <h3 className="text-2xl font-bold text-[#262626] mb-3 line-clamp-2">
+                  <h3 className={`text-2xl font-bold mb-3 line-clamp-2 transition-colors duration-300 ${
+                    isDarkMode ? 'text-[#f5e6dc]' : 'text-[#262626]'
+                  }`}>
                     {module.title}
                   </h3>
-                  <p className="text-base text-[#666] line-clamp-3 leading-relaxed">
+                  <p className={`text-base line-clamp-3 leading-relaxed transition-colors duration-300 ${
+                    isDarkMode ? 'text-[#c9a89a]' : 'text-[#666]'
+                  }`}>
                     {module.description || `Explore ${module.topics?.length || 0} essential topics in this module.`}
                   </p>
                 </div>
@@ -206,7 +234,9 @@ export default function ModuleCarousel({
                 {/* Topics Preview */}
                 <div className="px-8 pb-6 flex-1">
                   <div className="mb-3">
-                    <h4 className="text-xs uppercase tracking-[0.2em] text-[#c1b6a4] font-semibold mb-3">
+                    <h4 className={`text-xs uppercase tracking-[0.2em] font-semibold mb-3 transition-colors duration-300 ${
+                      isDarkMode ? 'text-[#c9a89a]' : 'text-[#c1b6a4]'
+                    }`}>
                       Topics Covered
                     </h4>
                   </div>
@@ -214,14 +244,22 @@ export default function ModuleCarousel({
                     {module.topics?.slice(0, 5).map((topic, topicIndex) => (
                       <div
                         key={topic.id}
-                        className="flex items-start gap-3 text-sm text-[#4a4a4a] p-2 rounded-lg hover:bg-[#fff5ef]/50 transition-colors"
+                        className={`flex items-start gap-3 text-sm p-2 rounded-lg transition-colors ${
+                          isDarkMode 
+                            ? 'text-[#b8998a] hover:bg-[#2a1f1a]/50' 
+                            : 'text-[#4a4a4a] hover:bg-[#fff5ef]/50'
+                        }`}
                       >
-                        <div className="w-2 h-2 rounded-full bg-[#a95757] mt-1.5 flex-shrink-0" />
+                        <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                          isDarkMode ? 'bg-[#c24f63]' : 'bg-[#a95757]'
+                        }`} />
                         <span className="line-clamp-2 flex-1">{topic.title}</span>
                       </div>
                     ))}
                     {(module.topics?.length || 0) > 5 && (
-                      <div className="text-sm text-[#a95757] font-semibold flex items-center gap-1 pl-5 pt-1">
+                      <div className={`text-sm font-semibold flex items-center gap-1 pl-5 pt-1 transition-colors duration-300 ${
+                        isDarkMode ? 'text-[#c24f63]' : 'text-[#a95757]'
+                      }`}>
                         +{(module.topics?.length || 0) - 5} more topics
                         <ChevronRight className="w-4 h-4" />
                       </div>
@@ -230,9 +268,15 @@ export default function ModuleCarousel({
                 </div>
 
                 {/* Footer */}
-                <div className="px-8 py-5 bg-gradient-to-r from-[#fff5ef] to-[#f2e7d9] border-t-2 border-[#f2e7d9]">
+                <div className={`px-8 py-5 border-t-2 transition-colors duration-300 ${
+                  isDarkMode 
+                    ? 'bg-gradient-to-r from-[#2a1f1a] to-[#1f1410] border-[#3a2f2a]' 
+                    : 'bg-gradient-to-r from-[#fff5ef] to-[#f2e7d9] border-[#f2e7d9]'
+                }`}>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-[#666] font-medium">
+                    <span className={`text-sm font-medium transition-colors duration-300 ${
+                      isDarkMode ? 'text-[#c9a89a]' : 'text-[#666]'
+                    }`}>
                       {module.topics?.length || 0} {(module.topics?.length || 0) === 1 ? 'Topic' : 'Topics'}
                     </span>
                     <div className="flex gap-1">
@@ -242,6 +286,8 @@ export default function ModuleCarousel({
                           className={`w-4 h-4 ${
                             i <= Math.min(Math.ceil((module.topics?.length || 0) / 2), 5)
                               ? 'text-amber-400 fill-amber-400'
+                              : isDarkMode 
+                              ? 'text-[#3a2f2a] fill-[#3a2f2a]'
                               : 'text-gray-300 fill-gray-300'
                           }`}
                         />
@@ -262,8 +308,8 @@ export default function ModuleCarousel({
                 key={index}
                 className={`h-2 rounded-full transition-all ${
                   currentIndex % modules.length === index
-                    ? 'w-8 bg-[#a95757]'
-                    : 'w-2 bg-[#e8d6c9]'
+                    ? isDarkMode ? 'w-8 bg-[#c24f63]' : 'w-8 bg-[#a95757]'
+                    : isDarkMode ? 'w-2 bg-[#3a2f2a]' : 'w-2 bg-[#e8d6c9]'
                 }`}
                 animate={{
                   scale: currentIndex % modules.length === index ? 1.1 : 1
@@ -278,7 +324,9 @@ export default function ModuleCarousel({
       </div>
 
       {/* Helper Text */}
-      <p className="text-sm text-[#999] text-center mt-4 flex items-center justify-center gap-2">
+      <p className={`text-sm text-center mt-4 flex items-center justify-center gap-2 transition-colors duration-300 ${
+        isDarkMode ? 'text-[#b8998a]' : 'text-[#999]'
+      }`}>
         <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#a95757] animate-pulse" />
         Drag or swipe to explore all modules
       </p>

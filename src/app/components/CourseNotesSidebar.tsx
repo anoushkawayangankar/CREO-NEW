@@ -6,6 +6,7 @@ import { CourseModule } from '@/app/types/course';
 interface CourseNotesSidebarProps {
   modules: CourseModule[];
   selectedModuleId?: string;
+  isDarkMode?: boolean;
 }
 
 interface CourseNote {
@@ -16,7 +17,7 @@ interface CourseNote {
   createdAt: string;
 }
 
-export default function CourseNotesSidebar({ modules, selectedModuleId: propModuleId }: CourseNotesSidebarProps) {
+export default function CourseNotesSidebar({ modules, selectedModuleId: propModuleId, isDarkMode = false }: CourseNotesSidebarProps) {
   const [selectedModuleId, setSelectedModuleId] = useState(propModuleId || modules[0]?.id || '');
   const [selectedTopicId, setSelectedTopicId] = useState(modules.find(m => m.id === (propModuleId || modules[0]?.id))?.topics[0]?.id || '');
   const [noteText, setNoteText] = useState('');
@@ -73,20 +74,28 @@ export default function CourseNotesSidebar({ modules, selectedModuleId: propModu
   }, [propModuleId, modules, selectedModuleId]);
 
   return (
-    <aside className="bg-white rounded-3xl border border-[#f2e7d9] shadow-lg p-5 space-y-5 sticky top-6 max-h-[80vh] overflow-y-auto">
+    <aside className={`rounded-3xl border shadow-lg p-5 space-y-5 sticky top-6 max-h-[80vh] overflow-y-auto transition-colors duration-300 ${
+      isDarkMode 
+        ? 'bg-[#1a120e] border-[#3a2f2a]' 
+        : 'bg-white border-[#f2e7d9]'
+    }`}>
       <div>
-        <p className="text-xs tracking-[0.4em] uppercase text-[#c1b6a4]">Notes</p>
-        <h3 className="text-xl font-semibold text-[#111]">Study stream</h3>
-        <p className="text-sm text-[#4a4a4a]">Capture insights per topic while you explore the modules.</p>
+        <p className={`text-xs tracking-[0.4em] uppercase transition-colors duration-300 ${isDarkMode ? 'text-[#c9a89a]' : 'text-[#c1b6a4]'}`}>Notes</p>
+        <h3 className={`text-xl font-semibold transition-colors duration-300 ${isDarkMode ? 'text-[#f5e6dc]' : 'text-[#111]'}`}>Study stream</h3>
+        <p className={`text-sm transition-colors duration-300 ${isDarkMode ? 'text-[#c9a89a]' : 'text-[#4a4a4a]'}`}>Capture insights per topic while you explore the modules.</p>
       </div>
 
       <div className="space-y-3">
         <div>
-          <label className="text-xs text-[#6f6f6f] uppercase tracking-[0.2em]">Module</label>
+          <label className={`text-xs uppercase tracking-[0.2em] transition-colors duration-300 ${isDarkMode ? 'text-[#b8998a]' : 'text-[#6f6f6f]'}`}>Module</label>
           <select
             value={selectedModuleId}
             onChange={(e) => handleModuleChange(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-[#eaded0] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#262626]/15"
+            className={`mt-1 w-full rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c24f63]/30 transition-colors duration-300 ${
+              isDarkMode 
+                ? 'border-[#3a2f2a] bg-[#1f1410] text-[#f5e6dc]' 
+                : 'border-[#eaded0] bg-white text-[#111]'
+            }`}
           >
             {moduleOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -96,11 +105,15 @@ export default function CourseNotesSidebar({ modules, selectedModuleId: propModu
           </select>
         </div>
         <div>
-          <label className="text-xs text-[#6f6f6f] uppercase tracking-[0.2em]">Topic</label>
+          <label className={`text-xs uppercase tracking-[0.2em] transition-colors duration-300 ${isDarkMode ? 'text-[#b8998a]' : 'text-[#6f6f6f]'}`}>Topic</label>
           <select
             value={selectedTopicId}
             onChange={(e) => setSelectedTopicId(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-[#eaded0] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#262626]/15"
+            className={`mt-1 w-full rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c24f63]/30 transition-colors duration-300 ${
+              isDarkMode 
+                ? 'border-[#3a2f2a] bg-[#1f1410] text-[#f5e6dc]' 
+                : 'border-[#eaded0] bg-white text-[#111]'
+            }`}
           >
             {topicOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -114,14 +127,22 @@ export default function CourseNotesSidebar({ modules, selectedModuleId: propModu
             value={noteText}
             onChange={(e) => setNoteText(e.target.value)}
             placeholder="Capture what clicked or a link to revisit..."
-            className="w-full h-28 rounded-2xl border border-[#eaded0] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#262626]/15"
+            className={`w-full h-28 rounded-2xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c24f63]/30 transition-colors duration-300 ${
+              isDarkMode 
+                ? 'border-[#3a2f2a] bg-[#1f1410] text-[#f5e6dc] placeholder:text-[#b8998a]' 
+                : 'border-[#eaded0] bg-white text-[#111] placeholder:text-[#6f6f6f]'
+            }`}
           />
         </div>
         <button
           type="button"
           onClick={handleAddNote}
           disabled={!noteText.trim() || !selectedModuleId || !selectedTopicId}
-          className="w-full rounded-full bg-[#111] text-white text-sm font-semibold tracking-wide py-2 disabled:opacity-40"
+          className={`w-full rounded-full text-sm font-semibold tracking-wide py-2 disabled:opacity-40 transition-colors duration-300 ${
+            isDarkMode 
+              ? 'bg-[#f5e6dc] text-[#1f120f] hover:bg-[#e6d7cd]' 
+              : 'bg-[#111] text-white hover:bg-[#2f221f]'
+          }`}
         >
           Drop note into stream
         </button>
@@ -133,17 +154,21 @@ export default function CourseNotesSidebar({ modules, selectedModuleId: propModu
           if (moduleNotes.length === 0) return null;
           return (
             <div key={module.id} className="space-y-2">
-              <p className="text-xs tracking-[0.4em] uppercase text-[#c1b6a4]">{module.title}</p>
+              <p className={`text-xs tracking-[0.4em] uppercase transition-colors duration-300 ${isDarkMode ? 'text-[#c9a89a]' : 'text-[#c1b6a4]'}`}>{module.title}</p>
               <div className="space-y-2">
                 {moduleNotes.map((note) => {
                   const topic = module.topics.find((t) => t.id === note.topicId);
                   return (
-                    <div key={note.id} className="rounded-2xl border border-[#f2e7d9] p-3 bg-white">
-                      <p className="text-xs text-[#6f6f6f] flex justify-between">
+                    <div key={note.id} className={`rounded-2xl border p-3 transition-colors duration-300 ${
+                      isDarkMode 
+                        ? 'border-[#3a2f2a] bg-[#1f1410]' 
+                        : 'border-[#f2e7d9] bg-white'
+                    }`}>
+                      <p className={`text-xs flex justify-between transition-colors duration-300 ${isDarkMode ? 'text-[#b8998a]' : 'text-[#6f6f6f]'}`}>
                         <span>{topic?.title || 'Topic'}</span>
                         <span>{formatTimestamp(note.createdAt)}</span>
                       </p>
-                      <p className="text-sm text-[#111] mt-1">
+                      <p className={`text-sm mt-1 transition-colors duration-300 ${isDarkMode ? 'text-[#f5e6dc]' : 'text-[#111]'}`}>
                         {note.text}
                       </p>
                     </div>
@@ -154,7 +179,7 @@ export default function CourseNotesSidebar({ modules, selectedModuleId: propModu
           );
         })}
         {notes.length === 0 && (
-          <p className="text-sm text-[#6f6f6f]">No notes yet. Start typing to build your personal stream.</p>
+          <p className={`text-sm transition-colors duration-300 ${isDarkMode ? 'text-[#b8998a]' : 'text-[#6f6f6f]'}`}>No notes yet. Start typing to build your personal stream.</p>
         )}
       </div>
     </aside>

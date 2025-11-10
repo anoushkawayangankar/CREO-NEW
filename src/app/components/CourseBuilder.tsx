@@ -785,6 +785,7 @@ export default function CourseBuilder({ isDarkMode, onToggleDarkMode }: CourseBu
             topic={course.title}
             learnerCount={Math.max(90, course.modules.length * 42 + course.title.length * 3)}
             joinUrl={buildStudyLink(course.title)}
+            isDarkMode={isDarkMode}
           />
 
           {formData.includeVideos !== false && hasVideoContent && (
