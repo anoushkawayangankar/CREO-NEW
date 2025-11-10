@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Course, CourseModule } from '@/app/types/course';
-import { CheckCircle2, Star, Trophy, Zap } from 'lucide-react';
+import { CheckCircle2, Star, Trophy, Zap, Sparkles } from 'lucide-react';
 import { Space_Grotesk } from 'next/font/google';
 
 const bodyFont = Space_Grotesk({ subsets: ['latin'], weight: ['400', '500', '600'] });
@@ -14,22 +14,22 @@ interface GameifiedRoadmapProps {
 const GameifiedRoadmap = ({ course }: GameifiedRoadmapProps) => {
   const modules = course.modules || [];
   
-  // Create winding Candy Crush-style path positions (percentages for responsive design)
+  // Create winding Candy Crush-style path with better spacing
   const getNodePosition = (index: number, total: number) => {
     const progress = index / Math.max(total - 1, 1);
     
-    // Create a winding S-curve path from bottom to top
-    const y = 80 - (progress * 60); // Bottom to top (80% to 20%)
+    // Vertical progression from bottom to top with good spacing
+    const y = 85 - (progress * 65); // Bottom (85%) to top (20%)
     
-    // Alternate left-right with smooth sine wave for variety
-    const amplitude = 20; // How far left/right the path swings
-    const frequency = 0.8; // Number of curves
+    // Smooth S-curve winding left-right
+    const amplitude = 22;
+    const frequency = 0.7;
     const x = 50 + Math.sin(index * frequency * Math.PI) * amplitude;
     
     return { x, y };
   };
 
-  // Generate SVG path through all nodes using percentages
+  // Generate smooth Bezier curve path
   const generatePath = () => {
     if (modules.length === 0) return '';
     
@@ -40,17 +40,19 @@ const GameifiedRoadmap = ({ course }: GameifiedRoadmapProps) => {
         path += `M ${pos.x} ${pos.y}`;
       } else {
         const prevPos = getNodePosition(index - 1, modules.length);
-        const midX = (prevPos.x + pos.x) / 2;
-        const midY = (prevPos.y + pos.y) / 2;
-        // Use quadratic curves for smooth winding path
-        path += ` Q ${midX} ${midY}, ${pos.x} ${pos.y}`;
+        // Use smooth cubic Bezier for natural curves
+        const controlOffset = Math.abs(pos.y - prevPos.y) * 0.5;
+        const cp1x = prevPos.x;
+        const cp1y = prevPos.y - controlOffset;
+        const cp2x = pos.x;
+        const cp2y = pos.y + controlOffset;
+        path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${pos.x} ${pos.y}`;
       }
     });
     return path;
   };
 
   const pathData = generatePath();
-  const pathLength = modules.length * 50; // Estimated path length for animation
 
   return (
     <div className={`${bodyFont.className} w-full py-8`}>
@@ -59,11 +61,11 @@ const GameifiedRoadmap = ({ course }: GameifiedRoadmapProps) => {
         initial={false}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="flex items-center justify-between mb-8"
+        className="flex items-center justify-between mb-6"
       >
         <div>
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#fff5ef] to-[#f2e7d9] rounded-full border border-[#a95757]/20 mb-2">
-            <Trophy className="w-4 h-4 text-[#a95757]" />
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#fff5ef] to-[#f2e7d9] rounded-full border border-[#a95757]/20 mb-2 shadow-sm">
+            <Sparkles className="w-4 h-4 text-[#a95757]" />
             <span className="text-xs uppercase tracking-[0.2em] text-[#a95757] font-semibold">
               Your Learning Journey
             </span>
@@ -72,49 +74,71 @@ const GameifiedRoadmap = ({ course }: GameifiedRoadmapProps) => {
           <p className="text-sm text-[#666]">{course.description}</p>
         </div>
         
-        {/* Progress stats */}
-        <div className="flex items-center gap-2 bg-white px-5 py-3 rounded-full shadow-lg border border-[#f2e7d9]">
+        {/* Progress stats - glassmorphic */}
+        <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm px-5 py-3 rounded-full shadow-xl border border-white">
           <Star className="w-5 h-5 text-[#a95757] fill-[#a95757]" />
           <span className="text-lg font-bold text-[#262626]">{modules.length}</span>
           <span className="text-sm text-[#666]">modules</span>
         </div>
       </motion.div>
 
-      {/* Candy Crush style map */}
-      <div className="relative w-full bg-gradient-to-br from-[#fffcf9] to-[#fff5ef] rounded-3xl shadow-xl p-8 border border-[#f2e7d9]" style={{ minHeight: '500px', height: '70vh', maxHeight: '700px' }}>
+      {/* Candy Crush/Byju's style game map */}
+      <div 
+        className="relative w-full bg-gradient-to-br from-[#fefdfb] via-[#fff8f3] to-[#fff5ef] rounded-3xl shadow-2xl p-12 border border-white overflow-hidden" 
+        style={{ minHeight: '600px', height: '75vh', maxHeight: '800px' }}
+      >
+        {/* Decorative background sparkles */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-10 left-10 w-2 h-2 bg-[#a95757]/20 rounded-full animate-ping" />
+          <div className="absolute top-32 right-20 w-3 h-3 bg-[#c1b6a4]/20 rounded-full animate-pulse" />
+          <div className="absolute bottom-24 left-24 w-2 h-2 bg-[#a95757]/20 rounded-full animate-ping" style={{ animationDelay: '1s' }} />
+        </div>
         
-        {/* SVG Path connecting all nodes */}
-        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+        {/* Glowing SVG Path */}
+        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ filter: 'drop-shadow(0 0 8px rgba(169, 87, 87, 0.3))' }}>
           <defs>
-            <linearGradient id="pathGradient" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#a95757" stopOpacity="0.4" />
-              <stop offset="50%" stopColor="#c1b6a4" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#a95757" stopOpacity="0.4" />
+            {/* Glowing gradient for path */}
+            <linearGradient id="pathGlow" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#ff9a8b" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#ffd89b" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#a18cd1" stopOpacity="0.6" />
             </linearGradient>
+            
+            {/* Animated glow effect */}
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="0.5" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
           </defs>
           
+          {/* Main path with glow */}
           <motion.path
             d={pathData}
             fill="none"
-            stroke="url(#pathGradient)"
-            strokeWidth="1.2"
+            stroke="url(#pathGlow)"
+            strokeWidth="1.5"
             strokeLinecap="round"
-            strokeDasharray="none"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: 2, ease: 'easeInOut', delay: 0.3 }}
+            filter="url(#glow)"
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 1 }}
+            transition={{ duration: 2.5, ease: 'easeInOut', delay: 0.2 }}
           />
         </svg>
 
-        {/* Module nodes positioned along the path */}
+        {/* 3D Floating Module Nodes */}
         {modules.map((module, index) => {
           const position = getNodePosition(index, modules.length);
-          const gradientColors = [
-            'bg-gradient-to-br from-[#ff9a8b] to-[#a95757]',
-            'bg-gradient-to-br from-[#ffd89b] to-[#c1b6a4]',
-            'bg-gradient-to-br from-[#a18cd1] to-[#a95757]'
+          
+          // Glossy 3D gradient colors
+          const gradients = [
+            'from-pink-400 via-rose-400 to-pink-600',
+            'from-amber-300 via-yellow-400 to-orange-500',
+            'from-purple-400 via-violet-500 to-indigo-600'
           ];
-          const bgGradient = gradientColors[index % gradientColors.length];
+          const gradient = gradients[index % gradients.length];
           
           return (
             <motion.div
@@ -122,64 +146,110 @@ const GameifiedRoadmap = ({ course }: GameifiedRoadmapProps) => {
               className="absolute transform -translate-x-1/2 -translate-y-1/2 group"
               style={{ left: `${position.x}%`, top: `${position.y}%` }}
               initial={false}
-              animate={{ scale: 1, opacity: 1 }}
+              animate={{ 
+                scale: 1, 
+                opacity: 1,
+                y: [0, -8, 0] // Floating animation
+              }}
               transition={{
-                delay: 0.5 + index * 0.15,
+                delay: 0.6 + index * 0.12,
                 type: 'spring',
-                stiffness: 260,
-                damping: 20
+                stiffness: 200,
+                damping: 15,
+                y: {
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                  delay: index * 0.3
+                }
               }}
             >
-              {/* Glow effect for first module (current) */}
+              {/* Glow ring for current module */}
               {index === 0 && (
-                <div className="absolute inset-0 w-20 h-20 -m-4 bg-[#a95757] rounded-full blur-xl opacity-30 animate-pulse" />
+                <motion.div 
+                  className="absolute inset-0 w-28 h-28 -m-6 rounded-full blur-2xl opacity-40"
+                  style={{ background: 'radial-gradient(circle, rgba(255,154,139,0.6) 0%, transparent 70%)' }}
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.6, 0.4] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                />
               )}
 
-              {/* Circle node */}
+              {/* 3D Glossy Badge */}
               <motion.button
-                whileHover={{ scale: 1.2 }}
-                whileTap={{ scale: 0.95 }}
-                className={`relative w-20 h-20 rounded-full flex items-center justify-center shadow-2xl cursor-pointer transition-all duration-300 ${bgGradient} border-4 border-white`}
+                whileHover={{ scale: 1.15, rotate: [0, -3, 3, 0] }}
+                whileTap={{ scale: 0.9 }}
+                className={`relative w-24 h-24 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 bg-gradient-to-br ${gradient} shadow-2xl`}
+                style={{
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.15), 0 10px 20px rgba(0,0,0,0.1), inset 0 -3px 10px rgba(0,0,0,0.2), inset 0 3px 10px rgba(255,255,255,0.3)'
+                }}
                 aria-label={`Module ${index + 1}: ${module.title}`}
               >
-                {/* Show icon instead of number for visual appeal */}
-                <div className="relative z-10">
-                  {index === 0 && <Star className="w-9 h-9 text-white drop-shadow-lg" fill="white" />}
-                  {index === modules.length - 1 && <Trophy className="w-9 h-9 text-white drop-shadow-lg" />}
-                  {index > 0 && index < modules.length - 1 && <Zap className="w-9 h-9 text-white drop-shadow-lg" />}
+                {/* Glossy highlight overlay */}
+                <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/40 via-transparent to-transparent" style={{ clipPath: 'ellipse(70% 40% at 50% 20%)' }} />
+                
+                {/* Icon with drop shadow */}
+                <div className="relative z-10 drop-shadow-lg">
+                  {index === 0 && <Star className="w-11 h-11 text-white" fill="white" />}
+                  {index === modules.length - 1 && <Trophy className="w-11 h-11 text-white" />}
+                  {index > 0 && index < modules.length - 1 && <Zap className="w-11 h-11 text-white" />}
                 </div>
 
-                {/* Module number badge */}
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center text-sm font-bold text-[#262626] shadow-lg border-2 border-[#a95757]">
+                {/* Glassmorphic number badge */}
+                <motion.div 
+                  className="absolute -top-2 -right-2 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-xl backdrop-blur-md border-2 border-white/50"
+                  style={{ 
+                    background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%)',
+                    color: '#262626'
+                  }}
+                  whileHover={{ scale: 1.2, rotate: 360 }}
+                  transition={{ type: 'spring', stiffness: 300 }}
+                >
                   {index + 1}
-                </div>
+                </motion.div>
 
-                {/* Completion checkmark */}
-                <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-md">
-                  <CheckCircle2 className="w-5 h-5 text-[#34d399] fill-[#34d399]" />
-                </div>
+                {/* Completion checkmark with pulse */}
+                <motion.div 
+                  className="absolute -bottom-1 -right-1 bg-white rounded-full p-1 shadow-lg"
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500 fill-emerald-500" />
+                </motion.div>
+
+                {/* 3D depth effect */}
+                <div className="absolute inset-0 rounded-full" style={{ boxShadow: 'inset 0 -4px 8px rgba(0,0,0,0.2)' }} />
               </motion.button>
 
-              {/* Topic count stars below */}
-              <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 flex gap-0.5">
+              {/* Star rating with glow */}
+              <div className="absolute -bottom-7 left-1/2 transform -translate-x-1/2 flex gap-0.5">
                 {[1, 2, 3].map((i) => (
                   <Star
                     key={i}
-                    className={`w-3 h-3 ${
+                    className={`w-3.5 h-3.5 drop-shadow-md ${
                       i <= Math.min(module.topics?.length || 0, 3)
-                        ? 'text-[#a95757] fill-[#a95757]'
-                        : 'text-[#e5e7eb]'
+                        ? 'text-amber-400 fill-amber-400'
+                        : 'text-gray-300 fill-gray-300'
                     }`}
                   />
                 ))}
               </div>
 
-              {/* Tooltip on hover */}
-              <div className="absolute top-20 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap">
-                <div className="bg-[#262626] text-white text-sm px-4 py-2 rounded-xl shadow-2xl border border-[#a95757]/20">
-                  <div className="font-semibold mb-1">{module.title}</div>
-                  <div className="text-xs text-[#c1b6a4]">{module.topics?.length || 0} topics</div>
-                </div>
+              {/* Enhanced tooltip with glassmorphism */}
+              <div className="absolute top-28 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-50 whitespace-nowrap">
+                <motion.div 
+                  className="px-5 py-3 rounded-2xl shadow-2xl backdrop-blur-xl border border-white/30"
+                  style={{ 
+                    background: 'linear-gradient(135deg, rgba(38,38,38,0.95) 0%, rgba(38,38,38,0.9) 100%)'
+                  }}
+                  initial={{ y: -10, opacity: 0 }}
+                  whileHover={{ y: 0, opacity: 1 }}
+                >
+                  <div className="font-bold text-white mb-1 flex items-center gap-2">
+                    <Sparkles className="w-3 h-3 text-amber-400" />
+                    {module.title}
+                  </div>
+                  <div className="text-xs text-gray-300">{module.topics?.length || 0} topics to master</div>
+                </motion.div>
               </div>
             </motion.div>
           );
