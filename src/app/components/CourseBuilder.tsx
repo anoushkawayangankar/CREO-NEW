@@ -262,6 +262,11 @@ export default function CourseBuilder() {
 
       console.log(`[${requestId}] Success: "${data.course?.title}" (${data.course?.modules.length} modules, ${data.generationTime}ms)`);
       
+      // Warn if generation took too long (indicates API retries/fallback)
+      if (data.generationTime && data.generationTime > 40000) {
+        setError('⚠️ AI generation experienced delays (likely API quota limits). Your course uses a template structure customized for "' + formData.topic + '". For fully AI-generated content, check your Gemini API quota at https://ai.dev/usage');
+      }
+      
       setCourse(data.course!);
       if (typeof window !== 'undefined' && data.course) {
         try {
@@ -504,7 +509,7 @@ export default function CourseBuilder() {
                   'Generate course'
                 )}
               </button>
-              <div className="min-h-[2.75rem] min-w-[12rem] flex items-center justify-end">{renderStatusBadge()}</div>
+              <div className="min-h-[2.75rem] min-w-[14rem] flex items-center justify-end px-2">{renderStatusBadge()}</div>
             </div>
           </div>
         </div>
