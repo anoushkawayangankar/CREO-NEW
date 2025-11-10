@@ -101,9 +101,13 @@ export default function CourseBuilder() {
   const completionTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const durationVariants = useMemo(() => buildDurationVariants(formData.duration), [formData.duration]);
   const activeDurationVariant = useMemo(() => {
-    const days = parseDurationToDays(formData.duration);
+    const input = formData.duration || '';
+    console.log('Computing duration for:', input);
+    const days = parseDurationToDays(input);
     const weeks = Math.max(1, Math.round(days / 7));
-    return { label: 'Weeks', value: `${weeks} wk${weeks > 1 ? 's' : ''}` };
+    const result = { label: 'Weeks', value: `${weeks} wk${weeks > 1 ? 's' : ''}` };
+    console.log('Computed duration:', result);
+    return result;
   }, [formData.duration]);
   const aggregatedCourseVideos = useMemo(() => (course ? collectCourseVideos(course.modules) : []), [course]);
   const hasVideoContent = useMemo(
