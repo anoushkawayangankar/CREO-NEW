@@ -6,7 +6,19 @@ CREO (formerly LearnLoop) is a Next.js-based learning platform that uses Google'
 **Current State**: Successfully migrated from Vercel to Replit and running in production mode.
 
 ## Recent Changes
-- **November 10, 2025 (Latest)**: Implemented complete dark mode toggle system
+- **November 10, 2025 (Latest)**: Extended dark mode to course builder and learning path
+  - **Course Builder Dark Mode**: Complete dark theme for /course page with navbar toggle
+  - **Synced Theme State**: Dark mode preference syncs between homepage and course builder via localStorage
+  - **All Components Themed**: CourseBuilder, ModuleCarousel, CourseNotesSidebar, ModuleSocialSpace, LearningPathCohortCard all support dark mode
+  - **Interactive Waves**: Waves background adapts color in dark mode (coral tint)
+  - **Form Elements**: All inputs, selects, textareas styled for both themes with coral focus rings
+  - **Status Badges**: Animated status indicators (Ready, Generating, Course ready) themed for dark mode
+  - **Notes Sidebar**: Study stream sidebar fully themed with dark backgrounds and borders
+  - **Social Spaces**: Study group pods and cohort cards styled for dark mode
+  - **Carousel Cards**: 3D module carousel cards with dark gradients and themed indicators
+  - **Home Button**: Course builder navbar includes Home link to return to homepage
+  
+- **November 10, 2025**: Implemented complete dark mode toggle system (Homepage)
   - **Dark Mode Toggle**: Moon/Sun icon button in navbar for instant theme switching
   - **localStorage Persistence**: Theme preference saved and persists across sessions
   - **Dark Theme Colors**: Deep purples, browns, and grays (`#1a120e`, `#1f1410`, `#0f0a08`)
