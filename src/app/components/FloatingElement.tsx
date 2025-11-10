@@ -2,7 +2,11 @@
 
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import { Playfair_Display, Space_Grotesk } from 'next/font/google';
 import { FloatingElementConfig } from '@/app/config/heroFloatingElements';
+
+const headlineFont = Playfair_Display({ subsets: ['latin'], weight: ['600', '700'] });
+const bodyFont = Space_Grotesk({ subsets: ['latin'], weight: ['400', '500', '600'] });
 
 interface FloatingElementProps {
   config: FloatingElementConfig;
@@ -84,13 +88,13 @@ export default function FloatingElement({ config, isDarkMode, parallaxStrength =
           <div>
             <p
               style={{ color: theme.text }}
-              className="text-sm font-semibold transition-colors duration-500"
+              className={`${headlineFont.className} text-sm font-semibold transition-colors duration-500`}
             >
               {config.title}
             </p>
             <p
               style={{ color: `${theme.text}80` }}
-              className="text-xs transition-colors duration-500"
+              className={`${bodyFont.className} text-xs transition-colors duration-500`}
             >
               {config.subtitle}
             </p>
