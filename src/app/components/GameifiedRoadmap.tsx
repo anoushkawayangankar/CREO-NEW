@@ -50,8 +50,9 @@ const GameifiedRoadmap = ({ course }: GameifiedRoadmapProps) => {
 
   return (
     <div className={`${bodyFont.className} w-full py-8`}>
+      {/* Accessibility: Skip animations for reduced-motion users */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={false}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
         className="text-center mb-8"
@@ -82,8 +83,9 @@ const GameifiedRoadmap = ({ course }: GameifiedRoadmapProps) => {
                 <div className="h-12 w-1 bg-gradient-to-b from-[#c1b6a4]/40 to-[#a95757]/40 mx-auto" />
               )}
               
+              {/* Accessibility: Skip animations for reduced-motion users */}
               <motion.div
-                initial={{ scale: 0, opacity: 0 }}
+                initial={false}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{
                   delay: 0.3 + index * 0.2,
