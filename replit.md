@@ -6,11 +6,21 @@ LearnLoop is a Next.js-based learning platform that uses Google's Gemini AI to g
 **Current State**: Successfully migrated from Vercel to Replit and running in production mode.
 
 ## Recent Changes
-- **November 10, 2025 (Latest)**: Enhanced UI with beautiful animated time cadence display
+- **November 10, 2025 (Latest)**: Added gamified roadmap visualization for course journeys
+  - Created GameifiedRoadmap component with Candy Crush/Byju's-style visual journey
+  - Animated SVG path drawing connects module nodes in a winding, game-like path
+  - Beautiful gradient nodes with Star (start), Zap (middle), Trophy (end) icons
+  - Smooth spring animations: path drawing (2s), node pop-in (staggered 0.2s each)
+  - Hover/focus effects reveal module details with glow animation
+  - Fully keyboard accessible with proper ARIA labels and focus states
+  - Progress stats cards showing total modules, topics, and difficulty level
+  - Displays automatically after course generation with smooth reveal
+  
+- **November 10, 2025**: Enhanced UI with beautiful animated time cadence display
   - Created glassmorphic time cadence badge with smooth spring animations
   - Subtle breathing animation (gentle scale pulse every 4 seconds)
   - Hover effect with warm shadow glow matching brand colors
-  - Value updates with smooth slide-up animation as you type
+  - Value updates in real-time as you type in duration field
   - Moved "Generate course" button and status badge below input fields (right-aligned)
   - Added clear warning when Gemini API quota exceeded (>40s generation time)
   
@@ -40,7 +50,11 @@ LearnLoop is a Next.js-based learning platform that uses Google's Gemini AI to g
 
 ### Key Features
 - AI-powered course generation using Gemini API
-- Course journey visualization
+- **Gamified roadmap visualization** - Candy Crush/Byju's-style learning journey map
+  - Animated SVG paths connecting module nodes
+  - Interactive hover/focus cards with module details
+  - Progress indicators and achievement icons
+  - Fully accessible keyboard navigation
 - Interactive course builder
 - API testing interface
 - Video workspace integration
@@ -54,6 +68,11 @@ src/
 │   │   ├── generate/     # Gemini AI generation endpoint
 │   │   └── course/       # Course-related endpoints
 │   ├── components/       # React components
+│   │   ├── GameifiedRoadmap.tsx    # Gamified learning journey visualization
+│   │   ├── CourseBuilder.tsx       # Main course builder interface
+│   │   ├── FeaturedVideoWorkspace.tsx
+│   │   ├── CourseNotesSidebar.tsx
+│   │   └── ...
 │   ├── lib/             # Utility libraries
 │   ├── types/           # TypeScript type definitions
 │   └── utils/           # Helper utilities
