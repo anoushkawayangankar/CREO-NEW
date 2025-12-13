@@ -7,7 +7,9 @@ type Params = {
 
 export async function GET(_request: NextRequest, { params }: Params) {
   try {
-    const lesson = getLessonById(params.id);
+    // Next.js 16+ requires awaiting params
+    const { id } = await Promise.resolve(params);
+    const lesson = getLessonById(id);
     if (!lesson) {
       return NextResponse.json({ success: false, error: 'Lesson not found' }, { status: 404 });
     }
