@@ -12,6 +12,8 @@ export type LearningStyle =
 
 export type AttentionSpan = 'short' | 'medium' | 'long';
 
+export type LearningPace = 'slow' | 'balanced' | 'fast';
+
 export type UserProfile = {
   id: string;
   name: string;
@@ -21,6 +23,17 @@ export type UserProfile = {
   attentionSpan: AttentionSpan;
   pastStruggles: string[];
   progressNotes?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type UserPreferences = {
+  id: string;
+  userId: string;
+  dailyTimeBudget: number; // minutes
+  learningPace: LearningPace;
+  remindersEnabled: boolean;
+  timezone: string;
   createdAt: string;
   updatedAt: string;
 };
