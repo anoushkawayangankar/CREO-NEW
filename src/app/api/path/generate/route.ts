@@ -18,12 +18,16 @@ export async function POST(request: NextRequest) {
     const validationResult = GeneratePathRequestSchema.safeParse(body);
 
     if (!validationResult.success) {
+      const errorMessages = validationResult.error.issues
+        ? validationResult.error.issues.map(e => `${e.path.join('.')}: ${e.message}`).join('; ')
+        : validationResult.error.message || 'Validation failed';
+        
       return NextResponse.json(
         {
           success: false,
           error: {
             code: ErrorCode.VALIDATION_ERROR,
-            message: validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('; '),
+            message: errorMessages,
             suggestedFix: getSuggestedFix(ErrorCode.VALIDATION_ERROR)
           }
         },
