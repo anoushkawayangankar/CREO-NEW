@@ -185,6 +185,22 @@ export default function Home() {
     <>
       <LearningCoach />
 
+      {/* Quick access to profile */}
+      <Link
+        href="/profile"
+        className={`group fixed bottom-5 left-5 z-50 flex items-center gap-2 rounded-full border backdrop-blur-md px-3 py-2 text-sm font-semibold transition-all ${
+          isDarkMode
+            ? 'bg-[#1f1410]/85 border-[#3a2f2a]/60 text-[#f5e6dc] hover:bg-[#2a1f1a]/90 shadow-[0_10px_30px_rgba(0,0,0,0.35)]'
+            : 'bg-white/85 border-[#1f120f]/10 text-[#1f120f] hover:bg-white shadow-[0_10px_30px_rgba(0,0,0,0.12)]'
+        }`}
+        aria-label="Open profile"
+      >
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#c24f63] to-[#d86d87] text-white shadow-md transition-transform duration-200 group-hover:scale-105">
+          <User className="h-4 w-4" />
+        </span>
+        <span className="pr-1">Profile</span>
+      </Link>
+
       <AnimatePresence>
         {showIntro && showIntro !== null && (
           <motion.div
