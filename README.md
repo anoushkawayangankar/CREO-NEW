@@ -12,7 +12,7 @@ Production-ready, adaptive tutoring experience that detects when learners are bl
 ```bash
 npm install
 npm run dev
-# open http://localhost:5000
+# open http://localhost:3000 (or set PORT to override)
 ```
 
 ### Environment
@@ -40,7 +40,7 @@ The first request creates `data/learning.db` with three tables:
 - Topic progress confidence nudges up on positive turns and down on struggles, enabling lightweight progress feedback in the UI.
 
 ## Scripts
-- `npm run dev` – start the Next.js app on port 5000  
+- `npm run dev` – start the Next.js app (defaults to port 3000; honor PORT env)  
 - `npm run build` – production build  
 - `npm run start` – run the built app  
 - `npm run lint` – lint

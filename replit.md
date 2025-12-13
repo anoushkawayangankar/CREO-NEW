@@ -97,7 +97,7 @@ CREO (formerly LearnLoop) is a Next.js-based learning platform that uses Google'
   - Status flow: idle → loading → done (5s) → idle
   
 - **November 10, 2025**: Migrated project from Vercel to Replit
-  - Configured Next.js to run on port 5000 with 0.0.0.0 binding for Replit compatibility
+  - Configured Next.js to bind 0.0.0.0 and respect the `PORT` env (defaults to 3000) for Replit compatibility
   - Set up development workflow with webview output
   - Configured deployment for Replit autoscale
   - Added allowedDevOrigins configuration for Replit domains
@@ -187,14 +187,14 @@ src/
 
 ### Running Locally
 The development server runs automatically via the configured workflow:
-- Port: 5000
+- Port: uses `PORT` if set (Replit injects one), otherwise 3000
 - Host: 0.0.0.0 (accessible from Replit webview)
 - Hot reload enabled
 
 ### Scripts
-- `npm run dev`: Start development server on port 5000
+- `npm run dev`: Start development server (defaults to 3000; respects `PORT`)
 - `npm run build`: Build for production
-- `npm run start`: Start production server on port 5000
+- `npm run start`: Start production server (defaults to 3000; respects `PORT`)
 - `npm run lint`: Run ESLint
 
 ### Deployment
