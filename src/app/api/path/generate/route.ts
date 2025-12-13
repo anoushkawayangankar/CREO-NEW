@@ -74,8 +74,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: true,
+          traceId: existing.job?.traceId || traceId,
           jobId: existing.jobId,
-          traceId: existing.job?.traceId || 'unknown',
           message: 'Job already exists for this idempotency key'
         },
         { status: 200 }
