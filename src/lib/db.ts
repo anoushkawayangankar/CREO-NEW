@@ -204,6 +204,18 @@ const ensureDatabase = (): Database => {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
 
+    CREATE TABLE IF NOT EXISTS user_preferences (
+      id TEXT PRIMARY KEY,
+      user_id TEXT UNIQUE NOT NULL,
+      daily_time_budget INTEGER DEFAULT 30,
+      learning_pace TEXT DEFAULT 'balanced',
+      reminders_enabled INTEGER DEFAULT 1,
+      timezone TEXT DEFAULT 'UTC',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
     CREATE TABLE IF NOT EXISTS skills (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
