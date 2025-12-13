@@ -415,15 +415,20 @@ export default function CourseBuilder({ isDarkMode, onToggleDarkMode }: CourseBu
         
         if (status === 'succeeded') {
           // Step 3: Fetch the generated course
-          const courseId = statusData.data.courseId;
+          const courseId = statusResult.data.data.courseId;
           const courseResponse = await fetch(`/api/courses/${courseId}`);
-          const courseData = await courseResponse.json();
+          const courseResult = await safeJson(courseResponse, `/api/courses/${courseId}`);
           
-          if (!courseResponse.ok || !courseData.success) {
-            throw new Error('Failed to fetch generated course');
+          if (!courseResult.ok || !courseResult.data?.success) {
+            console.error('[Course Generation] Course fetch failed:', {
+              status: courseResult.status,
+              traceId: courseResult.traceId,
+              courseId
+            });
+            throw new Error(courseResult.errorMessage || 'Failed to fetch generated course');
           }
           
-          console.log(`[${idempotencyKey}] Success: Course generated with ${courseData.data.course.modules.length} modules`);
+          console.log(`[${idempotencyKey}] Success: Course generated with ${courseResult.data.data.course.modules.length} modules [traceId: ${courseResult.traceId}]`);
           
           // Transform to match existing Course interface
           const transformedCourse = transformCourseData(courseData.data.course, idempotencyKey);
