@@ -189,6 +189,8 @@ export default function CourseBuilder({ isDarkMode, onToggleDarkMode }: CourseBu
   const [statusState, setStatusState] = useState<'idle' | 'loading' | 'done'>('idle');
   const completionTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [durationInput, setDurationInput] = useState(formData.duration);
+  const pollingRef = useRef<boolean>(false);
+  const currentJobId = useRef<string | null>(null);
   
   useEffect(() => {
     setDurationInput(formData.duration);
