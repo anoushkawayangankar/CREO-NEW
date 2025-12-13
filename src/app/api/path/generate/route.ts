@@ -95,8 +95,7 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Create job
-    const traceId = `trace_${randomUUID()}`;
+    // Create job (traceId already generated at function start)
     const job = await prisma.job.create({
       data: {
         userId,
