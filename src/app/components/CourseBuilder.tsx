@@ -431,7 +431,7 @@ export default function CourseBuilder({ isDarkMode, onToggleDarkMode }: CourseBu
           console.log(`[${idempotencyKey}] Success: Course generated with ${courseResult.data.data.course.modules.length} modules [traceId: ${courseResult.traceId}]`);
           
           // Transform to match existing Course interface
-          const transformedCourse = transformCourseData(courseData.data.course, idempotencyKey);
+          const transformedCourse = transformCourseData(courseResult.data.data.course, idempotencyKey);
           setCourse(transformedCourse);
           pollingRef.current = false;
           currentJobId.current = null;
