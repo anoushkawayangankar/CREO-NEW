@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { safeJson } from '@/app/utils/safeJson';
 import {
   Course,
   CourseGenerationRequest,
