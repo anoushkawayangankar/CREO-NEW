@@ -32,6 +32,7 @@ export async function GET(request: NextRequest, context: Params) {
       return NextResponse.json(
         {
           success: false,
+          traceId,
           error: {
             code: ErrorCode.JOB_NOT_FOUND,
             message: 'Job not found',
