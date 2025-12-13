@@ -127,3 +127,175 @@ model QuestProgress {
   @@id([questId, userId])
   @@map("quest_progress")
 }
+
+// ========================================
+// COURSE GENERATION SYSTEM
+// ========================================
+
+model Course {
+  id          String   @id @default(uuid())
+  userId      String
+  topic       String
+  level       String   @default("beginner") // beginner | intermediate | advanced
+  timePerDay  Int      @default(30) // minutes
+  timePerWeek Int?     // optional
+  deadline    DateTime?
+  status      String   @default("draft") // draft | generating | active | archived
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  modules   Module[]
+  jobs      Job[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("courses")
+}
+
+model Module {
+  id          String   @id @default(uuid())
+  courseId    String
+  order       Int      // 1-5
+  title       String
+  description String
+  outcomes    String   // JSON array
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  course    Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons   Lesson[]
+  quizzes   Quiz[]
+  resources Resource[]
+
+  @@unique([courseId, order])
+  @@index([courseId])
+  @@map("modules")
+}
+
+model Lesson {
+  id               String   @id @default(uuid())
+  moduleId         String
+  order            Int
+  title            String
+  type             String   @default("learn") // learn | practice | apply
+  content          String?  // Markdown or JSON
+  estimatedMinutes Int      @default(10)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([moduleId, order])
+  @@index([moduleId])
+  @@map("lessons")
+}
+
+model Quiz {
+  id             String   @id @default(uuid())
+  moduleId       String
+  totalQuestions Int      @default(10)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  module    Module         @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  questions QuizQuestion[]
+
+  @@index([moduleId])
+  @@map("quizzes")
+}
+
+model QuizQuestion {
+  id          String   @id @default(uuid())
+  quizId      String
+  type        String   @default("mcq") // mcq | short | code
+  question    String
+  options     String?  // JSON array for MCQ
+  answerKey   String
+  explanation String?
+  difficulty  String   @default("medium") // easy | medium | hard
+  tags        String   @default("[]") // JSON array
+  order       Int
+  createdAt   DateTime @default(now())
+
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([quizId])
+  @@map("quiz_questions")
+}
+
+model Resource {
+  id              String   @id @default(uuid())
+  moduleId        String
+  provider        String   @default("youtube") // youtube | article | doc
+  title           String
+  url             String
+  channel         String?
+  durationSeconds Int?
+  thumbnailUrl    String?
+  reason          String?  // Why this resource was selected
+  order           Int      @default(0)
+  createdAt       DateTime @default(now())
+
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@index([moduleId])
+  @@map("resources")
+}
+
+// ========================================
+// JOB SYSTEM & OBSERVABILITY
+// ========================================
+
+model Job {
+  id              String   @id @default(uuid())
+  userId          String
+  courseId        String?
+  type            String   // GENERATE_COURSE | ENRICH_CONTENT
+  status          String   @default("queued") // queued | running | succeeded | failed
+  progressPercent Int      @default(0)
+  currentStage    String?
+  traceId         String   @unique
+  errorCode       String?
+  errorMessage    String?
+  result          String?  // JSON result data
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course?    @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  events JobEvent[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([traceId])
+  @@map("jobs")
+}
+
+model JobEvent {
+  id      String   @id @default(uuid())
+  jobId   String
+  stage   String   // Stage name
+  level   String   @default("info") // info | warn | error
+  message String
+  data    String?  // JSON additional data
+  ts      DateTime @default(now())
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([ts])
+  @@map("job_events")
+}
+
+model IdempotencyKey {
+  id        String   @id @default(uuid())
+  userId    String
+  key       String   @unique
+  jobId     String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([key])
+  @@map("idempotency_keys")
+}
