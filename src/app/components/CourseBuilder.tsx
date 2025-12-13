@@ -290,8 +290,8 @@ export default function CourseBuilder({ isDarkMode, onToggleDarkMode }: CourseBu
       return;
     }
 
-    const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-    console.log(`[${requestId}] Course generation: ${formData.topic} (${formData.difficulty})`);
+    const idempotencyKey = `${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    console.log(`[${idempotencyKey}] Course generation: ${formData.topic} (${formData.difficulty})`);
     
     setLoading(true);
     setError(null);
@@ -308,9 +308,16 @@ export default function CourseBuilder({ isDarkMode, onToggleDarkMode }: CourseBu
     let wasSuccessful = false;
 
     try {
-      const payload = { ...formData, requestId };
+      // Use the new robust course generation API
+      const payload = {
+        topic: formData.topic,
+        level: formData.difficulty || 'beginner',
+        timePerDay: 30, // default 30 minutes per day
+        idempotencyKey: idempotencyKey
+      };
       
-      const response = await fetch('/api/course/generate', {
+      // Step 1: Start course generation
+      const startResponse = await fetch('/api/path/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -318,24 +325,59 @@ export default function CourseBuilder({ isDarkMode, onToggleDarkMode }: CourseBu
         body: JSON.stringify(payload)
       });
 
-      const responseText = await response.text();
-      let data: CourseGenerationResponse;
-      try {
-        data = JSON.parse(responseText);
-      } catch (e) {
-        console.error(`[${requestId}] Failed to parse response`);
-        throw new Error('Invalid response format from server');
-      }
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Failed to generate course');
-      }
-
-      console.log(`[${requestId}] Success: "${data.course?.title}" (${data.course?.modules.length} modules, ${data.generationTime}ms)`);
+      const startData = await startResponse.json();
       
-      // Warn if generation took too long (indicates API retries/fallback)
-      if (data.generationTime && data.generationTime > 40000) {
-        setError('⚠️ AI generation experienced delays (likely API quota limits). Your course uses a template structure customized for "' + formData.topic + '". For fully AI-generated content, check your Gemini API quota at https://ai.dev/usage');
+      if (!startResponse.ok || !startData.success) {
+        throw new Error(startData.error?.message || 'Failed to start course generation');
+      }
+
+      const jobId = startData.jobId;
+      console.log(`[${idempotencyKey}] Job started: ${jobId}`);
+      
+      // Step 2: Poll for completion
+      let attempts = 0;
+      const maxAttempts = 60; // 2 minutes max
+      
+      while (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Poll every 2 seconds
+        
+        const statusResponse = await fetch(`/api/jobs/${jobId}`);
+        const statusData = await statusResponse.json();
+        
+        if (!statusResponse.ok || !statusData.success) {
+          throw new Error('Failed to check job status');
+        }
+        
+        const { status, progressPercent, currentStage } = statusData.data;
+        console.log(`[${idempotencyKey}] Progress: ${progressPercent}% - ${currentStage}`);
+        
+        if (status === 'succeeded') {
+          // Step 3: Fetch the generated course
+          const courseId = statusData.data.courseId;
+          const courseResponse = await fetch(`/api/courses/${courseId}`);
+          const courseData = await courseResponse.json();
+          
+          if (!courseResponse.ok || !courseData.success) {
+            throw new Error('Failed to fetch generated course');
+          }
+          
+          console.log(`[${idempotencyKey}] Success: Course generated with ${courseData.data.course.modules.length} modules`);
+          
+          // Transform to match existing Course interface
+          const transformedCourse = transformCourseData(courseData.data.course, idempotencyKey);
+          setCourse(transformedCourse);
+          wasSuccessful = true;
+          break;
+        } else if (status === 'failed') {
+          const errorMsg = statusData.data.error?.message || 'Course generation failed';
+          throw new Error(errorMsg);
+        }
+        
+        attempts++;
+      }
+      
+      if (attempts >= maxAttempts) {
+        throw new Error('Course generation timed out. Please try again.');
       }
       
       setCourse(data.course!);
