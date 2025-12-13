@@ -45,6 +45,7 @@ export async function GET(request: NextRequest, context: Params) {
 
     const response: any = {
       success: true,
+      traceId: job.traceId || traceId,
       data: {
         jobId: job.id,
         type: job.type,
