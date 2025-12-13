@@ -372,13 +372,21 @@ export default function CourseBuilder({ isDarkMode, onToggleDarkMode }: CourseBu
         body: JSON.stringify(payload)
       });
 
-      const startData = await startResponse.json();
+      // Use safe JSON parsing to prevent "Unexpected end of JSON input"
+      const startResult = await safeJson(startResponse, '/api/path/generate');
       
-      if (!startResponse.ok || !startData.success) {
-        throw new Error(startData.error?.message || 'Failed to start course generation');
+      if (!startResult.ok || !startResult.data?.success) {
+        const errorMsg = startResult.errorMessage || startResult.data?.error?.message || 'Failed to start course generation';
+        console.error('[Course Generation] Start failed:', {
+          status: startResult.status,
+          traceId: startResult.traceId,
+          rawPreview: startResult.raw.substring(0, 300)
+        });
+        throw new Error(errorMsg);
       }
 
-      const jobId = startData.jobId;
+      const jobId = startResult.data.jobId;
+      const startTraceId = startResult.traceId;
       currentJobId.current = jobId;
       pollingRef.current = true;
       console.log(`[${idempotencyKey}] Job started: ${jobId}`);
