@@ -434,29 +434,7 @@ export default function CourseBuilder({ isDarkMode, onToggleDarkMode }: CourseBu
         throw new Error('Course generation timed out. Please try again.');
       }
       
-      setCourse(data.course!);
-      if (typeof window !== 'undefined' && data.course) {
-        try {
-          localStorage.setItem('creoActiveCourse', JSON.stringify(data.course));
-          const statusRaw = localStorage.getItem('creoCourseStatus');
-          const statusPayload: Record<string, Record<string, 'completed' | 'pending' | 'current'>> = statusRaw
-            ? JSON.parse(statusRaw)
-            : {};
-          if (!statusPayload[data.course.id]) {
-            statusPayload[data.course.id] = {};
-          }
-          localStorage.setItem('creoCourseStatus', JSON.stringify(statusPayload));
-          window.dispatchEvent(new Event('creo-course-updated'));
-        } catch (storageError) {
-          console.error('Failed to persist course locally:', storageError);
-        }
-      }
-      setFeaturedVideos(data.featuredVideos ?? null);
-      setGenerationStats({
-        time: data.generationTime,
-        videos: data.videosFetched
-      });
-      
+      // Course was already set in the polling loop above
       wasSuccessful = true;
       setStatusState('done');
       
@@ -464,11 +442,6 @@ export default function CourseBuilder({ isDarkMode, onToggleDarkMode }: CourseBu
         setStatusState('idle');
         completionTimeout.current = null;
       }, 5000);
-
-      if (data.course && data.course.modules.length > 0) {
-        setExpandedModules(new Set([data.course.modules[0].id]));
-        setSelectedModuleId(data.course.modules[0].id);
-      }
     } catch (err) {
       pollingRef.current = false;
       currentJobId.current = null;
