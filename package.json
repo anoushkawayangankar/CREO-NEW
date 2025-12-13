@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "-": "^0.0.1",
+    "baseline-browser-mapping": "^2.9.7",
     "better-sqlite3": "^12.5.0",
     "framer-motion": "^12.23.26",
     "lucide-react": "^0.468.0",
