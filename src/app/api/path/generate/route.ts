@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
+          traceId,
           error: {
             code: ErrorCode.VALIDATION_ERROR,
             message: errorMessages,
