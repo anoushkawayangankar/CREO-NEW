@@ -10,7 +10,9 @@ import { Course } from '@/app/types/course';
 import Waves from '@/app/components/Waves';
 import FloatingElement from '@/app/components/FloatingElement';
 import { HERO_FLOATING_ELEMENTS } from '@/app/config/heroFloatingElements';
-import LandingChat from '@/app/components/LandingChat';
+import LearningCoach from '@/app/components/learning-coach/LearningCoach';
+import LandingChat from '@/app/components/chat/LandingChat';
+import GamifiedDashboard from '@/app/components/dashboard/GamifiedDashboard';
 
 const headlineFont = Playfair_Display({ subsets: ['latin'], weight: ['600', '700', '900'] });
 const bodyFont = Space_Grotesk({ subsets: ['latin'], weight: ['400', '500', '600'] });
@@ -229,10 +231,7 @@ export default function Home() {
 
   return (
     <>
-      {/* Floating chat box on landing - bottom left */}
-      <div className="fixed bottom-6 left-6 z-50 w-[360px] max-w-[90vw]">
-        <LandingChat />
-      </div>
+      <LearningCoach />
 
       <AnimatePresence>
         {showIntro && showIntro !== null && (
@@ -661,6 +660,17 @@ export default function Home() {
             ))}
           </section>
 
+          {/* Gamified Loop */}
+          <section
+            className={`rounded-[36px] border p-6 transition-colors duration-300 ${
+              isDarkMode
+                ? 'border-[#3a2f2a] bg-[#1f1410] shadow-[0_35px_70px_rgba(0,0,0,0.25)]'
+                : 'border-[#f2e1d8] bg-white shadow-[0_35px_70px_rgba(37,23,19,0.08)]'
+            }`}
+          >
+            <GamifiedDashboard isDarkMode={isDarkMode} />
+          </section>
+
           {/* Flow */}
           <section className={`rounded-[36px] border p-8 transition-colors duration-300 ${
             isDarkMode 
@@ -813,7 +823,7 @@ export default function Home() {
                 <li>• Uses your profile to adapt tone and pacing.</li>
               </ul>
             </div>
-            <LandingChat />
+            <LandingChat isDarkMode={isDarkMode} />
           </section>
 
           {/* CTA */}

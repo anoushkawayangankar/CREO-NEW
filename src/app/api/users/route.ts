@@ -3,7 +3,10 @@ import {
   AttentionSpan,
   LearningStyle,
   createUserProfile,
+  getGameState,
+  getOrCreateUser,
   getRecentMessages,
+  getUserStats,
   getUserProfile,
   listTopicProgress,
   listUsers,
@@ -46,9 +49,10 @@ export async function POST(request: NextRequest) {
     }
 
     const progress = listTopicProgress(profile.id);
+    const stats = getUserStats(profile.id);
 
     return NextResponse.json(
-      { success: true, data: { profile, progress } },
+      { success: true, data: { profile, progress, stats } },
       { status: body.userId ? 200 : 201 }
     );
   } catch (error) {
@@ -66,7 +70,7 @@ export async function GET(request: NextRequest) {
     const id = searchParams.get('id');
 
     if (id) {
-      const user = getUserProfile(id);
+      const user = getOrCreateUser({ id });
       if (!user) {
         return NextResponse.json(
           { success: false, error: 'User not found' },
@@ -76,8 +80,9 @@ export async function GET(request: NextRequest) {
 
       const progress = listTopicProgress(id);
       const history = getRecentMessages(id, 20);
+      const state = getGameState(id);
       return NextResponse.json(
-        { success: true, data: { profile: user, progress, history } },
+        { success: true, data: { profile: user, progress, history, state } },
         { status: 200 }
       );
     }
