@@ -429,6 +429,8 @@ export default function CourseBuilder({ isDarkMode, onToggleDarkMode }: CourseBu
       }
       
       if (attempts >= maxAttempts) {
+        pollingRef.current = false;
+        currentJobId.current = null;
         throw new Error('Course generation timed out. Please try again.');
       }
       
