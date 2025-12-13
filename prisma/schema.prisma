@@ -297,6 +297,8 @@ model IdempotencyKey {
   jobId     String
   createdAt DateTime @default(now())
 
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
   @@index([userId])
   @@index([key])
   @@map("idempotency_keys")
