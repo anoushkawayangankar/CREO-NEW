@@ -39,6 +39,7 @@ export default function LearningCoach() {
   const [profile, setProfile] = useState<CoachProfile | null>(null);
   const [progress, setProgress] = useState<TopicProgress[]>([]);
   const [error, setError] = useState('');
+  const [profileCreationAttempted, setProfileCreationAttempted] = useState(false);
 
   const recentMessages = useMemo(
     () => messages.slice(Math.max(0, messages.length - MAX_RECENT)),
@@ -46,13 +47,17 @@ export default function LearningCoach() {
   );
 
   useEffect(() => {
+    // Run once guard - prevent duplicate profile creation on re-render
+    if (profileCreationAttempted) return;
+    setProfileCreationAttempted(true);
+
     const storedId = typeof window !== 'undefined' ? localStorage.getItem('creoTutorUserId') : null;
     if (storedId) {
       hydrateUser(storedId);
     } else {
       createUser();
     }
-  }, []);
+  }, [profileCreationAttempted]);
 
   const hydrateUser = async (id: string) => {
     try {
