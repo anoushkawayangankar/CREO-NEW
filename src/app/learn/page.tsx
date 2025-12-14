@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import {
   ArrowRight,
@@ -18,6 +19,7 @@ import {
   XCircle,
   Users
 } from 'lucide-react';
+import { CourseModule } from '@/app/types/course';
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] });
 
@@ -30,6 +32,30 @@ const DEFAULT_NEXT_STEP = {
 };
 
 const FEATURE_COLORS = ['#ffe8e8', '#fff0e0', '#e0f7f4'];
+const MiniCoachChat = dynamic(() => import('@/app/components/coach/MiniCoachChat'), { ssr: false });
+
+type ModeContent =
+  | {
+      type: 'notes';
+      content: { sections: { title: string; explanation: string; example?: string }[] };
+      generatedBy?: 'mock' | 'ai';
+    }
+  | {
+      type: 'quiz';
+      questions: {
+        type: 'mcq' | 'output' | 'reasoning';
+        question: string;
+        options?: string[];
+        code?: string;
+        answer: string;
+      }[];
+      generatedBy?: 'mock' | 'ai';
+    }
+  | {
+      type: 'homework';
+      task: { title: string; description: string; constraints?: string[]; hint?: string };
+      generatedBy?: 'mock' | 'ai';
+    };
 
 export default function LearnWorkspace() {
   const [topic, setTopic] = useState('JavaScript arrays for beginners');
@@ -41,8 +67,129 @@ export default function LearnWorkspace() {
   const [mode, setMode] = useState<Mode>('learn');
   const [showComparison, setShowComparison] = useState(true);
   const [progressExpanded, setProgressExpanded] = useState(false);
+  const [miniCoachOpen, setMiniCoachOpen] = useState(false);
+  const [content, setContent] = useState<ModeContent | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const nextStep = useMemo(() => DEFAULT_NEXT_STEP, []);
+  const currentModule = useMemo<CourseModule>(() => {
+    const moduleId = `learn-module-${mode}-${generated ? 'ready' : 'draft'}`;
+    const baseTitle = generated ? nextStep.title : 'Learning path setup';
+    const topics = [
+      {
+        id: `${moduleId}-t1`,
+        topicNumber: 1,
+        title: generated ? 'Current step' : 'Define your path',
+        content: '',
+        keyPoints: [],
+        practiceQuestions: [],
+        videos: []
+      },
+      {
+        id: `${moduleId}-t2`,
+        topicNumber: 2,
+        title: mode === 'practice' ? 'Practice focus' : 'Concept focus',
+        content: '',
+        keyPoints: [],
+        practiceQuestions: [],
+        videos: []
+      },
+      {
+        id: `${moduleId}-t3`,
+        topicNumber: 3,
+        title: 'Next actions',
+        content: '',
+        keyPoints: [],
+        practiceQuestions: [],
+        videos: []
+      }
+    ];
+    return {
+      id: moduleId,
+      moduleNumber: 1,
+      title: baseTitle,
+      description: generated ? nextStep.summary : 'Drafting your learning path',
+      learningObjectives: [],
+      estimatedDuration: generated ? nextStep.time : 'Self-paced',
+      topics
+    };
+  }, [generated, mode, nextStep.summary, nextStep.time, nextStep.title]);
+
+  const moduleIdFromTopic = (value: string) =>
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'learn-module';
+
+  const loadModeContent = async (targetMode: Mode) => {
+    setLoading(true);
+    setError(null);
+    const endpoint = targetMode === 'learn' ? '/api/learn' : targetMode === 'practice' ? '/api/practice' : '/api/apply';
+    const moduleId = moduleIdFromTopic(topic || nextStep.title);
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          moduleId,
+          course: topic || 'Learning path',
+          difficulty: experience.toLowerCase(),
+          title: nextStep.title,
+          depth: 'standard'
+        })
+      });
+      if (!res.ok) {
+        throw new Error('Failed to load content');
+      }
+      const payload = await res.json();
+      setContent(payload.data as ModeContent);
+    } catch (err) {
+      console.error('Mode content load failed', err);
+      setError('Could not load this step. Using a lightweight placeholder.');
+      // Simple inline fallback so something always shows.
+      if (targetMode === 'learn') {
+        setContent({
+          type: 'notes',
+          content: {
+            sections: [
+              { title: 'What you need to know', explanation: 'Keep scope tight. Aim for one small win today.' },
+              { title: 'Try this example', explanation: 'Draft a tiny snippet and sanity-check the output.', example: 'const arr = [1,2,3]; console.log(arr.length);' }
+            ]
+          },
+          generatedBy: 'mock'
+        });
+      } else if (targetMode === 'practice') {
+        setContent({
+          type: 'quiz',
+          questions: [
+            { type: 'mcq', question: 'Why iterate over an array?', options: ['To ignore items', 'To inspect each item', 'To delete the array'], answer: 'To inspect each item' },
+            { type: 'output', question: 'Output of `[1,2,3].length`?', code: '[1,2,3].length', answer: '3' }
+          ],
+          generatedBy: 'mock'
+        });
+      } else {
+        setContent({
+          type: 'homework',
+          task: {
+            title: 'Tiny apply task',
+            description: 'Write a short snippet that loops through 3 items and prints them.',
+            constraints: ['Keep it under 10 lines'],
+            hint: 'Use a simple for-of loop.'
+          },
+          generatedBy: 'mock'
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!generated) return;
+    loadModeContent(mode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [generated, mode]);
 
   return (
     <div className={`${jakarta.className} min-h-screen bg-[#fff8f5] text-[#1f120f]`}>
@@ -160,7 +307,10 @@ export default function LearnWorkspace() {
                 <p className="text-sm text-[#5b4743]">CREO will break this into clear steps using trusted resources.</p>
                 <button
                   type="button"
-                  onClick={() => setGenerated(true)}
+                  onClick={() => {
+                    setGenerated(true);
+                    setMode('learn');
+                  }}
                   className="inline-flex items-center justify-center rounded-full bg-[#c24f63] px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
                 >
                   Generate my path
@@ -192,23 +342,23 @@ export default function LearnWorkspace() {
                 </div>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-3">
-                {[
-                  { id: 'learn', title: 'Learn', desc: 'Follow the structured lesson with notes and examples.' },
-                  { id: 'practice', title: 'Practice', desc: 'Auto-generated questions from weak areas.', badge: 'Recommended' },
-                  { id: 'apply', title: 'Apply', desc: 'Mini task to use what you just learned.' }
-                ].map((item, idx) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setMode(item.id as Mode)}
-                    className={`flex h-full flex-col items-start gap-2 rounded-2xl border p-4 text-left transition ${
-                      mode === item.id ? 'border-[#c24f63] shadow-[0_10px_30px_rgba(194,79,99,0.15)]' : 'border-[#f2e1d8]'
-                    }`}
-                    style={{ backgroundColor: FEATURE_COLORS[idx] || '#fff3ee' }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className={`h-4 w-4 ${mode === item.id ? 'text-[#a33249]' : 'text-[#7d5c55]'}`} />
+          <div className="grid gap-3 sm:grid-cols-3">
+            {[
+              { id: 'learn', title: 'Learn', desc: 'Follow the structured lesson with notes and examples.' },
+              { id: 'practice', title: 'Practice', desc: 'Auto-generated questions from weak areas.', badge: 'Recommended' },
+              { id: 'apply', title: 'Apply', desc: 'Mini task to use what you just learned.' }
+            ].map((item, idx) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setMode(item.id as Mode)}
+                className={`flex h-full flex-col items-start gap-2 rounded-2xl border p-4 text-left transition ${
+                  mode === item.id ? 'border-[#c24f63] shadow-[0_10px_30px_rgba(194,79,99,0.15)]' : 'border-[#f2e1d8]'
+                }`}
+                style={{ backgroundColor: FEATURE_COLORS[idx] || '#fff3ee' }}
+              >
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className={`h-4 w-4 ${mode === item.id ? 'text-[#a33249]' : 'text-[#7d5c55]'}`} />
                       <p className="text-sm font-semibold text-[#1f120f]">{item.title}</p>
                       {item.badge && (
                         <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-[#c24f63]">
@@ -219,6 +369,87 @@ export default function LearnWorkspace() {
                     <p className="text-sm text-[#5b4743]">{item.desc}</p>
                   </button>
                 ))}
+              </div>
+
+              <div className="rounded-3xl border border-[#f2e1d8] bg-white/80 p-5 shadow-sm backdrop-blur">
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.3em] text-[#7d5c55]">Step content</p>
+                    <p className="text-sm font-semibold text-[#1f120f]">Mode: {mode}</p>
+                    {content?.generatedBy && (
+                      <p className="text-xs text-[#7d5c55]">
+                        Source: {content.generatedBy === 'ai' ? 'AI' : 'Mock'} snapshot
+                      </p>
+                    )}
+                  </div>
+                  {loading && <span className="text-xs text-[#c24f63]">Loading…</span>}
+                </div>
+                {error && (
+                  <p className="mt-2 rounded-xl bg-[#fff1ef] px-3 py-2 text-xs font-semibold text-[#c24f63]">
+                    {error}
+                  </p>
+                )}
+
+                <div className="mt-3 space-y-3 text-sm text-[#5b4743]">
+                  {!content && !loading && <p>Pick a mode to see content generated from your module.</p>}
+                  {content?.type === 'notes' && (
+                    <div className="space-y-3">
+                      {content.content.sections.map((section) => (
+                        <div key={section.title} className="rounded-2xl border border-[#f2e1d8] bg-white p-3">
+                          <p className="text-sm font-semibold text-[#1f120f]">{section.title}</p>
+                          <p className="text-sm text-[#5b4743]">{section.explanation}</p>
+                          {section.example && (
+                            <code className="mt-1 block rounded-lg bg-[#fff3ee] px-2 py-1 text-xs text-[#a33249]">
+                              {section.example}
+                            </code>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {content?.type === 'quiz' && (
+                    <div className="space-y-3">
+                      {content.questions.map((q, index) => (
+                        <div
+                          key={`${q.question}-${index}`}
+                          className="rounded-2xl border border-[#f2e1d8] bg-white p-3"
+                        >
+                          <p className="text-xs uppercase tracking-[0.2em] text-[#c24f63]">{q.type}</p>
+                          <p className="text-sm font-semibold text-[#1f120f]">{q.question}</p>
+                          {q.code && (
+                            <pre className="mt-1 rounded-lg bg-[#1f120f] px-2 py-1 text-xs text-white">{q.code}</pre>
+                          )}
+                          {q.options && (
+                            <ul className="mt-2 space-y-1 text-sm">
+                              {q.options.map((opt) => (
+                                <li key={opt} className="rounded-lg bg-[#fff3ee] px-2 py-1">
+                                  {opt}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                          <p className="mt-2 text-xs font-semibold text-[#1f7a4c]">Answer: {q.answer}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {content?.type === 'homework' && (
+                    <div className="space-y-2 rounded-2xl border border-[#f2e1d8] bg-white p-3">
+                      <p className="text-sm font-semibold text-[#1f120f]">{content.task.title}</p>
+                      <p className="text-sm text-[#5b4743]">{content.task.description}</p>
+                      {content.task.constraints?.length ? (
+                        <ul className="mt-1 list-disc list-inside text-sm">
+                          {content.task.constraints.map((c) => (
+                            <li key={c}>{c}</li>
+                          ))}
+                        </ul>
+                      ) : null}
+                      {content.task.hint && <p className="text-xs text-[#a33249]">Hint: {content.task.hint}</p>}
+                    </div>
+                  )}
+                </div>
               </div>
             </section>
           )}
@@ -348,7 +579,11 @@ export default function LearnWorkspace() {
               <p className="text-xs uppercase tracking-[0.3em] text-[#7d5c55]">Coach</p>
               <p className="mt-2 text-sm text-[#1f120f]">Stuck? Ask the coach.</p>
               <p className="text-xs text-[#5b4743]">Last blocker: “Loop keeps breaking at index.”</p>
-              <button className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#c24f63] px-4 py-2 text-sm font-semibold text-white shadow hover:-translate-y-0.5">
+              <button
+                type="button"
+                onClick={() => setMiniCoachOpen(true)}
+                className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#c24f63] px-4 py-2 text-sm font-semibold text-white shadow hover:-translate-y-0.5"
+              >
                 Ask a question <ArrowRight className="h-4 w-4" />
               </button>
             </div>
@@ -369,6 +604,15 @@ export default function LearnWorkspace() {
           </div>
         </aside>
       </div>
+      <MiniCoachChat
+        open={miniCoachOpen}
+        module={currentModule}
+        courseTitle={topic || 'Learning path'}
+        courseDifficulty={experience.toLowerCase()}
+        userProgress={generated ? 'Working on your next step' : 'Planning your path'}
+        lastQuizResult="No quiz attempt yet"
+        onClose={() => setMiniCoachOpen(false)}
+      />
     </div>
   );
 }

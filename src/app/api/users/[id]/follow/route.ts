@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/app/api/auth/helpers';
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { user, response } = await requireAuth(req);
   if (!user) return response!;
 
-  const targetId = params.id;
+  const p = await params;
+  const targetId = p.id;
   if (user.id === targetId) {
     return NextResponse.json({ success: false, error: 'You cannot follow yourself.' }, { status: 400 });
   }
@@ -27,19 +28,20 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       userId: targetId,
       type: 'follow',
       message: `${user.username || 'Someone'} followed you`,
-      metadata: { followerId: user.id }
+      metadata: JSON.stringify({ followerId: user.id })
     }
   });
 
   return NextResponse.json({ success: true });
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { user, response } = await requireAuth(req);
   if (!user) return response!;
 
+  const p = await params;
   await prisma.follow.deleteMany({
-    where: { followerId: user.id, followingId: params.id }
+    where: { followerId: user.id, followingId: p.id }
   });
 
   return NextResponse.json({ success: true });

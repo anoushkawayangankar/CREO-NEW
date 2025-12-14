@@ -66,6 +66,7 @@ export interface Course {
   tags: string[];
   createdAt: string;
   updatedAt: string;
+  requestId?: string;
 }
 
 export interface CourseGenerationRequest {

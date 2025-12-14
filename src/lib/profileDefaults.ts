@@ -52,9 +52,9 @@ export const bootstrapUserProfile = async (userId: string) => {
       xp: 0,
       tier: 'Bronze',
       milestones: 0,
-      languages: ['English'],
-      skills: ['Learning agility'],
-      badges: ['Momentum']
+      languages: JSON.stringify(['English']),
+      skills: JSON.stringify(['Learning agility']),
+      badges: JSON.stringify(['Momentum'])
     }
   });
 
@@ -77,7 +77,7 @@ export const bootstrapUserProfile = async (userId: string) => {
       userId,
       type: 'welcome',
       message: 'Joined CREO and started a new journey!',
-      metadata: { celebrated: false }
+      metadata: JSON.stringify({ celebrated: false })
     }
   });
 };

@@ -17,12 +17,14 @@ import ModuleSocialSpace from '@/app/components/ModuleSocialSpace';
 import ModuleCarousel from '@/app/components/ModuleCarousel';
 import Waves from '@/app/components/Waves';
 import { Playfair_Display, Space_Grotesk } from 'next/font/google';
+import dynamic from 'next/dynamic';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Moon, Sun, Home } from 'lucide-react';
 import Link from 'next/link';
 
 const headlineFont = Playfair_Display({ subsets: ['latin'], weight: ['600', '700'] });
 const bodyFont = Space_Grotesk({ subsets: ['latin'], weight: ['400', '500', '600'] });
+const MiniCoachChat = dynamic(() => import('@/app/components/coach/MiniCoachChat'), { ssr: false });
 
 // Centralized theme tokens
 const LIGHT_THEME = {
@@ -365,6 +367,8 @@ export default function CourseBuilder({ isDarkMode, onToggleDarkMode }: CourseBu
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
   const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set());
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
+  const [miniCoachOpen, setMiniCoachOpen] = useState(false);
+  const [coachModule, setCoachModule] = useState<CourseModule | null>(null);
   const [generationStats, setGenerationStats] = useState<{ time?: number; videos?: number } | null>(null);
   const [statusState, setStatusState] = useState<'idle' | 'loading' | 'done'>('idle');
   const completionTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -373,6 +377,26 @@ export default function CourseBuilder({ isDarkMode, onToggleDarkMode }: CourseBu
   useEffect(() => {
     setDurationInput(formData.duration);
   }, [formData.duration]);
+  useEffect(() => {
+    if (course && coachModule && !course.modules.some((mod) => mod.id === coachModule.id)) {
+      setCoachModule(null);
+      setMiniCoachOpen(false);
+    }
+    if (!course && coachModule) {
+      setCoachModule(null);
+      setMiniCoachOpen(false);
+    }
+  }, [coachModule, course]);
+
+  useEffect(() => {
+    if (!course?.modules?.length) return;
+    setSelectedModuleId((prev) => {
+      if (prev && course.modules.some((mod) => mod.id === prev)) {
+        return prev;
+      }
+      return course.modules[0]?.id || null;
+    });
+  }, [course]);
   
   const activeDurationVariant = useMemo(() => {
     const input = durationInput || formData.duration || '4 weeks';
@@ -441,6 +465,11 @@ export default function CourseBuilder({ isDarkMode, onToggleDarkMode }: CourseBu
       }
       return next;
     });
+  };
+
+  const openModuleCoach = (module: CourseModule) => {
+    setCoachModule(module);
+    setMiniCoachOpen(true);
   };
 
   const applyStarter = (starter: (typeof QUICK_STARTERS)[number]) => {
@@ -756,11 +785,30 @@ export default function CourseBuilder({ isDarkMode, onToggleDarkMode }: CourseBu
         </button>
         {isExpanded && (
           <div className="p-5 space-y-5">
+            <div className={`flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4 transition-colors duration-300 ${
+              isDarkMode ? 'border-[#3a2f2a] bg-[#271511]' : 'border-[#f2e7d9] bg-[#fff5ef]'
+            }`}>
+              <div>
+                <p className={`text-[0.65rem] uppercase tracking-[0.3em] transition-colors duration-300 ${theme.textLight}`}>
+                  Need a quick nudge?
+                </p>
+                <p className={`text-sm transition-colors duration-300 ${theme.textMuted}`}>
+                  Ask questions about {module.title}. The coach already knows this module and topics.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => openModuleCoach(module)}
+                className="inline-flex items-center gap-2 rounded-full bg-[#c24f63] px-4 py-2 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(194,79,99,0.35)] transition hover:-translate-y-0.5"
+              >
+                Ask Questions
+              </button>
+            </div>
             <ModuleSocialSpace
               moduleId={module.id}
               moduleTitle={module.title}
               order={module.moduleNumber}
-              joinUrl={buildStudyLink(`${course.title}-${module.title}`)}
+              joinUrl={buildStudyLink(`${(course?.title ?? '')}-${module.title}`)}
               isDarkMode={isDarkMode}
             />
             <div>
@@ -1153,18 +1201,16 @@ export default function CourseBuilder({ isDarkMode, onToggleDarkMode }: CourseBu
           )}
 
           {/* Module Details Section */}
-          {selectedModuleId && (
+          {course.modules.length > 0 && (
             <div id="module-details" className="scroll-mt-8">
               <div className="grid lg:grid-cols-[2fr,1fr] gap-8">
                 <div className="space-y-4">
-                  {course.modules
-                    .filter((m) => m.id === selectedModuleId)
-                    .map((module) => renderModule(module))}
+                  {course.modules.map((module) => renderModule(module))}
                 </div>
                 <CourseNotesSidebar 
-                  key={`${course.id}-${selectedModuleId}`} 
+                  key={`${course.id}-${selectedModuleId || course.modules[0]?.id || 'none'}`} 
                   modules={course.modules}
-                  selectedModuleId={selectedModuleId}
+                  selectedModuleId={selectedModuleId || course.modules[0]?.id || ''}
                   isDarkMode={isDarkMode}
                 />
               </div>
@@ -1172,6 +1218,22 @@ export default function CourseBuilder({ isDarkMode, onToggleDarkMode }: CourseBu
           )}
         </section>
       )}
+
+      <MiniCoachChat
+        open={miniCoachOpen}
+        module={coachModule}
+        courseTitle={course?.title || formData.topic || 'Course'}
+        courseDifficulty={course?.difficulty || formData.difficulty || 'intermediate'}
+        userProgress={
+          coachModule
+            ? selectedModuleId === coachModule.id
+              ? 'In this module right now'
+              : 'Reviewing the module outline'
+            : undefined
+        }
+        lastQuizResult={coachModule?.assessment?.quizQuestions?.length ? 'Quiz available' : 'No quiz taken yet'}
+        onClose={() => setMiniCoachOpen(false)}
+      />
       </div>
     </div>
   );

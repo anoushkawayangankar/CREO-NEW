@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/app/api/auth/helpers';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { user, response } = await requireAuth(req);
   if (!user) return response!;
 
+  const p = await params;
   const events = await prisma.activity.findMany({
-    where: { userId: params.id },
+    where: { userId: p.id },
     orderBy: { createdAt: 'desc' },
     take: 20
   });

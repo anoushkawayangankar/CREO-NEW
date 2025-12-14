@@ -2,15 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/app/api/auth/helpers';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { user, response } = await requireAuth(req);
   if (!user) return response!;
 
+  const p = await params;
   const followers = await prisma.follow.findMany({
-    where: { followingId: params.id },
+    where: { followingId: p.id },
     include: {
       follower: {
-        include: { stats: true }
+        include: { profileStats: true }
       }
     },
     orderBy: { createdAt: 'desc' }
@@ -22,7 +23,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       id: f.follower.id,
       username: f.follower.username,
       fullName: f.follower.fullName,
-      xp: f.follower.stats?.xp ?? 0,
+      xp: f.follower.profileStats?.xp ?? 0,
       joined: f.follower.createdAt
     }))
   });

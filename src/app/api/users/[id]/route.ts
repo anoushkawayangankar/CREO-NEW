@@ -2,16 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/app/api/auth/helpers';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { user, response } = await requireAuth(req);
   if (!user) return response!;
 
-  const userId = params.id;
+  const p = await params;
+  const userId = p.id;
 
   const profile = await prisma.user.findUnique({
     where: { id: userId },
     include: {
-      stats: true
+      profileStats: true
     }
   });
 
@@ -36,10 +37,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       fullName: profile.fullName,
       bio: profile.bio,
       createdAt: profile.createdAt,
-      stats: profile.stats,
+      stats: profile.profileStats,
       followers,
       following,
       isFollowing: Boolean(isFollowing)
     }
   });
-}
+} 

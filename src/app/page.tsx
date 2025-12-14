@@ -9,6 +9,8 @@ import { Course } from '@/app/types/course';
 import Waves from '@/app/components/Waves';
 import LearningCoach from '@/app/components/learning-coach/LearningCoach';
 import LandingChat from '@/app/components/chat/LandingChat';
+import LoginForm from '@/app/components/auth/LoginForm';
+import SignUpForm from '@/app/components/auth/SignUpForm';
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] });
 const headlineFont = jakarta;
@@ -25,6 +27,39 @@ const COLORS = {
   textSecondary: '#5b4743',
   textTertiary: '#9b867f',
   borderLight: '#f2e1d8'
+};
+
+type AuthDialogueProps = {
+  onClose: () => void;
+  isDark: boolean;
+};
+
+const AuthDialogue = ({ onClose, isDark }: AuthDialogueProps) => {
+  return (
+    <div
+      className={`w-[360px] rounded-3xl border p-4 shadow-xl ${
+        isDark ? 'border-[#3a2f2a] bg-[#1f1410]' : 'border-[#f2e1d8] bg-white'
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <p className={`text-sm font-semibold ${isDark ? 'text-[#f5e6dc]' : 'text-[#1f120f]'}`}>Welcome back</p>
+        <button
+          type="button"
+          onClick={onClose}
+          className={`h-8 w-8 rounded-full text-sm font-semibold ${
+            isDark ? 'text-[#f5e6dc] hover:bg-[#2a1f1a]' : 'text-[#1f120f] hover:bg-[#f2e1d8]'
+          }`}
+        >
+          ×
+        </button>
+      </div>
+      <div className="mt-3 grid gap-3">
+        <LoginForm />
+        <div className={`text-center text-xs ${isDark ? 'text-[#c9a89a]' : 'text-[#5b4743]'}`}>or</div>
+        <SignUpForm />
+      </div>
+    </div>
+  );
 };
 
 const HERO_DEFAULT = {

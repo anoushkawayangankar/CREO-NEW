@@ -13,6 +13,9 @@ datasource db {
 model User {
   id          String   @id @default(uuid())
   name        String
+  username    String?  @unique
+  fullName    String?
+  bio         String?
   email       String?  @unique
   subjects    String   @default("[]") // JSON array
   goals       String   @default("")
@@ -28,6 +31,11 @@ model User {
   messages    Message[]
   topicProgress TopicProgress[]
   userStats   UserStats?
+  profileStats ProfileStats?
+  userAchievements UserAchievement[]
+  following Follow[] @relation("follower_following")
+  followers Follow[] @relation("following_follower")
+  activities Activity[]
   attempts    Attempt[]
   questProgress QuestProgress[]
   courses     Course[]
@@ -289,6 +297,74 @@ model JobEvent {
   @@index([jobId])
   @@index([ts])
   @@map("job_events")
+}
+
+model Achievement {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  title       String
+  description String?
+  icon        String?
+  target      Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  userAchievements UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  userId        String
+  achievementId String
+  progress      Int      @default(0)
+  completed     Boolean  @default(false)
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@id([userId, achievementId])
+  @@map("user_achievements")
+}
+
+model Follow {
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("follower_following", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("following_follower", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
+  @@map("follows")
+}
+
+model Activity {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  message   String?
+  metadata  String?  // JSON string
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("activities")
+}
+
+model ProfileStats {
+  userId    String  @id
+  streak    Int     @default(0)
+  xp        Int     @default(0)
+  tier      String  @default("Bronze")
+  milestones Int    @default(0)
+  languages String  @default("[]")
+  skills    String  @default("[]")
+  badges    String  @default("[]")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profile_stats")
 }
 
 model IdempotencyKey {

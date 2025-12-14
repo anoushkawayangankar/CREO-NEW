@@ -17,6 +17,16 @@ type ChatRequestBody = {
   message: string;
   topic?: string;
   modeOverride?: 'learning' | 'normal';
+  mode?: 'default' | 'module-help';
+  context?: {
+    course?: string;
+    difficulty?: string;
+    currentModule?: string;
+    currentTopics?: string[];
+    userProgress?: string;
+    lastQuizResult?: string;
+  };
+  systemPrompt?: string;
   controls?: {
     hint?: boolean;
     explainDifferently?: boolean;
@@ -31,6 +41,7 @@ const fallbackTutor = (params: {
   message: string;
   topic?: string;
   controls?: ChatRequestBody['controls'];
+  moduleContext?: ChatRequestBody['context'];
 }) => {
   const controlText: string[] = [];
   if (params.controls?.hint) controlText.push('Here is a hint.');
@@ -43,8 +54,13 @@ const fallbackTutor = (params: {
     : `Let's move forward together, ${params.name}.`;
 
   const topicText = params.topic ? ` on ${params.topic}` : '';
+  const moduleScope = params.moduleContext?.currentModule
+    ? ` I will stay focused on ${params.moduleContext.currentModule}.`
+    : '';
 
-  return `${prefix} ${controlText.join(' ')} Here is a small step${topicText}: identify what is confusing, state it in one sentence, then try a tiny example. What is the first piece you want to test?`;
+  return `${prefix} ${controlText.join(
+    ' '
+  )} Here is a small step${topicText}:${moduleScope} identify what is confusing, state it in one sentence, then try a tiny example. What is the first piece you want to test?`;
 };
 
 export async function POST(request: NextRequest) {
@@ -57,6 +73,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const mode = body.mode || 'default';
+    const moduleContext = body.context;
+    const topicKey =
+      body.topic ||
+      (moduleContext?.currentModule
+        ? `module:${moduleContext.course || 'course'}::${moduleContext.currentModule}`
+        : undefined);
+
     const profile = getUserProfile(body.userId);
     if (!profile) {
       return NextResponse.json(
@@ -65,12 +89,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const history = getRecentMessages(body.userId, 18);
+    const history = getRecentMessages(body.userId, 18, topicKey);
     const signals = detectLearningSignals({
       message: body.message,
       history,
       profile,
-      topic: body.topic,
+      topic: topicKey || body.topic || '',
       overrideMode: body.modeOverride
     });
 
@@ -78,16 +102,19 @@ export async function POST(request: NextRequest) {
       profile,
       signals,
       userMessage: body.message,
-      topic: body.topic,
+      topic: topicKey || body.topic,
       controls: body.controls,
-      history
+      history,
+      mode,
+      moduleContext,
+      systemPrompt: body.systemPrompt
     });
 
     recordMessage({
       userId: body.userId,
       role: 'user',
       content: body.message,
-      topic: body.topic,
+      topic: topicKey || body.topic || '',
       learningMode: signals.learningMode,
       sentiment: signals.sentiment,
       frustrationScore: signals.frustrationScore,
@@ -158,8 +185,9 @@ export async function POST(request: NextRequest) {
         name: profile.name,
         learningMode: signals.learningMode,
         message: body.message,
-        topic: body.topic,
-        controls: body.controls
+        topic: topicKey || body.topic,
+        controls: body.controls,
+        moduleContext
       });
     }
 
@@ -167,7 +195,7 @@ export async function POST(request: NextRequest) {
       userId: body.userId,
       role: 'assistant',
       content: assistantText,
-      topic: body.topic,
+      topic: topicKey || body.topic || '',
       learningMode: signals.learningMode,
       sentiment: 'positive',
       frustrationScore: 0,
@@ -179,10 +207,10 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    if (body.topic) {
+    if (topicKey || body.topic) {
       upsertTopicProgress({
         userId: body.userId,
-        topic: body.topic,
+        topic: topicKey || body.topic || '',
         learningMode: signals.learningMode,
         sentiment: signals.sentiment
       });

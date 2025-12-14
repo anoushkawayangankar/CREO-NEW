@@ -6,6 +6,16 @@ type BuildPromptParams = {
   signals: LearningSignalBundle;
   userMessage: string;
   topic?: string;
+  mode?: 'default' | 'module-help';
+  moduleContext?: {
+    course?: string;
+    difficulty?: string;
+    currentModule?: string;
+    currentTopics?: string[];
+    userProgress?: string;
+    lastQuizResult?: string;
+  };
+  systemPrompt?: string;
   controls?: {
     hint?: boolean;
     explainDifferently?: boolean;
@@ -30,10 +40,28 @@ export const buildTutorPrompt = ({
   signals,
   userMessage,
   topic,
+  mode = 'default',
+  moduleContext,
+  systemPrompt,
   controls,
   history
 }: BuildPromptParams) => {
+  const moduleSystemDirectives =
+    mode === 'module-help'
+      ? systemPrompt ||
+        `You are the user's personal learning coach for CREO.
+You are currently assisting with the module: ${moduleContext?.currentModule || topic || 'current module'}.
+
+Rules:
+- Only answer questions related to the current module or prerequisites
+- Use simple explanations first, then deeper ones if asked
+- Use examples relevant to the user's skill level
+- If the question is outside scope, gently redirect back
+- Never repeat content already covered unless the user is confused`
+      : '';
+
   const systemDirectives = `
+${moduleSystemDirectives}
 You are CREO's personal tutor. You are calm, patient, and your goal is learner understanding, not speed.
 - Prefer guiding questions over answers. Keep replies tight and actionable.
 - Explicitly adjust behavior when Learning Mode is ON.
@@ -57,6 +85,22 @@ Learner Profile:
 - Past struggles: ${profile.pastStruggles.join(', ') || 'none recorded'}
 `;
 
+  const moduleContextBlock =
+    mode === 'module-help'
+      ? `
+Module context:
+- Course: ${moduleContext?.course || 'N/A'}
+- Difficulty: ${moduleContext?.difficulty || 'unspecified'}
+- Current module: ${moduleContext?.currentModule || topic || 'N/A'}
+- Current topics: ${(moduleContext?.currentTopics || []).join(', ') || 'n/a'}
+- User progress: ${moduleContext?.userProgress || 'not provided'}
+- Last quiz result: ${moduleContext?.lastQuizResult || 'n/a'}
+Guardrails:
+- Stay within the current module scope; only pull in prerequisites if needed.
+- Do not regenerate the course or ask the learner for details already supplied.
+`
+      : '';
+
   const controlRequests: string[] = [];
   if (controls?.hint) controlRequests.push('Provide a hint, not the answer.');
   if (controls?.explainDifferently) controlRequests.push('Reframe with a different analogy or viewpoint.');
@@ -69,6 +113,8 @@ Output requirements:
 - Present guidance as short steps or a checkpoint question.
 - Offer a quick micro-exercise or example if helpful.
 - End with ONE direct question to confirm understanding or preference.
+${controlRequests.length ? `\nSpecial controls: ${controlRequests.join(' ')}` : ''}
+${mode === 'module-help' ? '\nStay scoped to this module and avoid unrelated topics.' : ''}
 `;
 
   return `
@@ -76,6 +122,7 @@ ${systemDirectives}
 ${learningModeInstructions}
 ${pacing}
 ${profileContext}
+${moduleContextBlock}
 Signals: Sentiment=${signals.sentiment} | Frustration=${signals.frustrationScore.toFixed(
     2
   )} | Reasons=${signals.reasons.join('; ') || 'n/a'} | Past struggle hits: ${

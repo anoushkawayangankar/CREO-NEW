@@ -132,6 +132,20 @@ export type UserQuestProgress = {
   updatedAt: string | null;
 };
 
+export type ModuleKnowledgeSnapshot = {
+  moduleId: string;
+  course: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  title: string;
+  concepts: string[];
+  explanations: { concept: string; explanation: string; example?: string }[];
+  prerequisites: string[];
+  depth: 'light' | 'standard' | 'deep';
+  generatedBy: 'mock' | 'ai';
+  createdAt: string;
+  updatedAt: string;
+};
+
 const DB_PATH = path.join(process.cwd(), 'data', 'learning.db');
 
 let db: Database | null = null;
@@ -214,6 +228,20 @@ const ensureDatabase = (): Database => {
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS module_snapshots (
+      module_id TEXT PRIMARY KEY,
+      course TEXT NOT NULL,
+      difficulty TEXT NOT NULL,
+      title TEXT NOT NULL,
+      concepts TEXT NOT NULL,
+      explanations TEXT NOT NULL,
+      prerequisites TEXT NOT NULL,
+      depth TEXT NOT NULL,
+      generated_by TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS skills (
@@ -884,28 +912,122 @@ export const recordMessage = (message: Omit<MessageRecord, 'createdAt' | 'id'> &
   return { ...message, id, createdAt: now };
 };
 
-export const getRecentMessages = (userId: string, limit = 15): MessageRecord[] => {
+export const getRecentMessages = (userId: string, limit = 15, topic?: string): MessageRecord[] => {
   const database = ensureDatabase();
-  const rows = database
-    .prepare(
-      `
-        SELECT id, user_id as userId, role, content, topic,
-               learning_mode as learningMode, sentiment, frustration_score as frustrationScore,
-               metadata, created_at as createdAt
-        FROM messages
-        WHERE user_id = ?
-        ORDER BY datetime(created_at) DESC
-        LIMIT ?
-      `
-    )
-    .all(userId, limit)
-    .reverse();
+  const rows = (topic
+    ? database.prepare(
+        `
+          SELECT id, user_id as userId, role, content, topic,
+                 learning_mode as learningMode, sentiment, frustration_score as frustrationScore,
+                 metadata, created_at as createdAt
+          FROM messages
+          WHERE user_id = ? AND topic = ?
+          ORDER BY datetime(created_at) DESC
+          LIMIT ?
+        `
+      ).all(userId, topic, limit)
+    : database.prepare(
+        `
+          SELECT id, user_id as userId, role, content, topic,
+                 learning_mode as learningMode, sentiment, frustration_score as frustrationScore,
+                 metadata, created_at as createdAt
+          FROM messages
+          WHERE user_id = ?
+          ORDER BY datetime(created_at) DESC
+          LIMIT ?
+        `
+      ).all(userId, limit)
+  ).reverse();
 
   return rows.map((row) => ({
     ...row,
     learningMode: Boolean(row.learningMode),
     metadata: parseJson<Record<string, unknown>>(row.metadata, {})
   }));
+};
+
+export const getModuleSnapshot = (moduleId: string): ModuleKnowledgeSnapshot | null => {
+  const database = ensureDatabase();
+  const row = database
+    .prepare(
+      `
+        SELECT module_id as moduleId, course, difficulty, title, concepts, explanations,
+               prerequisites, depth, generated_by as generatedBy, created_at as createdAt, updated_at as updatedAt
+        FROM module_snapshots
+        WHERE module_id = ?
+      `
+    )
+    .get(moduleId) as
+    | {
+        moduleId: string;
+        course: string;
+        difficulty: ModuleKnowledgeSnapshot['difficulty'];
+        title: string;
+        concepts: string;
+        explanations: string;
+        prerequisites: string;
+        depth: ModuleKnowledgeSnapshot['depth'];
+        generatedBy: ModuleKnowledgeSnapshot['generatedBy'];
+        createdAt: string;
+        updatedAt: string;
+      }
+    | undefined;
+
+  if (!row) return null;
+
+  return {
+    moduleId: row.moduleId,
+    course: row.course,
+    difficulty: row.difficulty,
+    title: row.title,
+    concepts: parseJson<string[]>(row.concepts, []),
+    explanations: parseJson<{ concept: string; explanation: string; example?: string }[]>(row.explanations, []),
+    prerequisites: parseJson<string[]>(row.prerequisites, []),
+    depth: row.depth,
+    generatedBy: row.generatedBy,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt
+  };
+};
+
+export const upsertModuleSnapshot = (snapshot: ModuleKnowledgeSnapshot): ModuleKnowledgeSnapshot => {
+  const database = ensureDatabase();
+  const now = new Date().toISOString();
+  const stored: ModuleKnowledgeSnapshot = { ...snapshot, updatedAt: snapshot.updatedAt || now, createdAt: snapshot.createdAt || now };
+
+  database
+    .prepare(
+      `
+        INSERT INTO module_snapshots
+          (module_id, course, difficulty, title, concepts, explanations, prerequisites, depth, generated_by, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(module_id) DO UPDATE SET
+          course = excluded.course,
+          difficulty = excluded.difficulty,
+          title = excluded.title,
+          concepts = excluded.concepts,
+          explanations = excluded.explanations,
+          prerequisites = excluded.prerequisites,
+          depth = excluded.depth,
+          generated_by = excluded.generated_by,
+          updated_at = excluded.updated_at
+      `
+    )
+    .run(
+      stored.moduleId,
+      stored.course,
+      stored.difficulty,
+      stored.title,
+      JSON.stringify(stored.concepts || []),
+      JSON.stringify(stored.explanations || []),
+      JSON.stringify(stored.prerequisites || []),
+      stored.depth,
+      stored.generatedBy,
+      stored.createdAt,
+      stored.updatedAt
+    );
+
+  return getModuleSnapshot(stored.moduleId) || stored;
 };
 
 export const listUsers = (): UserProfile[] => {
@@ -1191,4 +1313,3 @@ export const updateUserPreferences = (
 
   return getUserPreferences(userId);
 };
-
